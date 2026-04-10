@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <title>Upload</title>
+</head>
+
+<body class="bg-gray-200 flex justify-center items-center min-h-screen">
+
+    <!-- MAIN CONTAINER -->
+    <div class="bg-white w-full max-w-[340px] h-[640px] p-4 rounded-2xl shadow-lg flex flex-col">
+        <!-- TOKEN -->
+        <div class="flex items-center gap-3 mb-4">
+            <div class="w-12 h-12 bg-green-300 rounded-full flex items-center justify-center">
+                <svg class="w-6 h-6" fill="None" stroke="black" stroke-width="2" viewBox="0 0 24 24">
+                    <path d="M12 12c2.7 0 5-2.2 5-5s-2.3-5-5-5-5 2.2-5 5 2.3 5 5 5z" />
+                    <path d="M5 20a7 7 0 0114 0" />
+                </svg>
+            </div>
+
+            <div>
+                <p class="font-bold italic">Token ID:</p>
+                <div class="bg-gray-200 px-3 py-1 rounded-lg mt-1">
+                    {{ token }}
+                </div>
+            </div>
+        </div>
+
+        <!-- STATUS -->
+        <div id="statusMsg" class="hidden text-sm mb-3"></div>
+
+        <!-- UPLOAD BOX -->
+        <div class="border-2 border-dashed border-gray-400 rounded-xl p-5 text-center mb-4">
+
+            <svg class="w-10 h-10 mx-auto mb-2 text-gray-500" fill="none" stroke="currentColor" stroke-width="2"
+                viewBox="0 0 24 24">
+                <path d="M7 7h10M7 11h10M7 15h6M5 3h10l4 4v14H5z" />
+            </svg>
+
+            <p class="text-sm">
+                <span class="text-purple-500 font-semibold">Drag & Drop</span>
+                your file here
+            </p>
+
+            <p class="my-2 font-semibold">OR</p>
+
+            <input type="file" id="fileInput" multiple class="hidden">
+
+            <button onclick="document.getElementById('fileInput').click()"
+                class="bg-gray-200 px-5 py-2 rounded-xl font-semibold">
+                choose files
+            </button>
+        </div>
+
+        <!-- PREVIEW -->
+        <p class="italic font-semibold mb-1">preview :</p>
+
+        <div id="preview" class="flex-1 overflow-y-auto border rounded-xl p-2 mb-2 bg-gray-100">
+           
+        </div>
+
+        <!-- BUTTONS -->
+        <div class="flex gap-2 mt-auto">
+            <button onclick="cancelAll()" class="w-1/2 bg-gray-300 py-2 rounded-xl text-lg">
+                cancel
+            </button>
+
+            <button onclick="uploadFiles()" class="w-1/2 bg-cyan-500 text-white py-2 rounded-xl text-lg">
+                Upload
+            </button>
+        </div>
+
+    </div>
+
+    <script>
+        const dropArea = document.querySelector(".border-dashed");
+
+            // Drag over
+            dropArea.addEventListener("dragover", (e) => {
+                e.preventDefault();
+                dropArea.classList.add("bg-gray-100");
+            });
+
+            // Drag leave
+            dropArea.addEventListener("dragleave", () => {
+                dropArea.classList.remove("bg-gray-100");
+            });
+
+            // Drop
+            dropArea.addEventListener("drop", (e) => {
+                e.preventDefault();
+                dropArea.classList.remove("bg-gray-100");
+
+                let droppedFiles = Array.from(e.dataTransfer.files);
+
+                files = files.concat(droppedFiles);
+                renderPreview();
+            });
+        let files = [];
+
+        // SELECT FILES
+        document.getElementById("fileInput").addEventListener("change", function (e) {
+            let newFiles= Array.from(e.target.files);
+            files=files.concat(newFiles);
+            renderPreview();
+        });
+
+        // PREVIEW
+        function renderPreview() {
+            let preview = document.getElementById("preview");
+            preview.innerHTML = "";
+
+            files.forEach((file, index) => {
+                let div = document.createElement("div");
+
+              div.className = "flex justify-between items-center border rounded-xl px-3 py-2 mb-2 bg-white shadow-sm";
+                div.classList.add("hover:bg-gray-200");
+                div.innerHTML = `
+            <span class="truncate w-48 block">${file.name}</span>
+            <button onclick="removeFile(${index})">
+                <svg class="w-5 h-5 text-pink-500" fill="none" stroke="currentColor" stroke-width="2"
+                     viewBox="0 0 24 24">
+                    <path d="M19 7L5 7M10 11v6M14 11v6M9 7V4h6v3M5 7l1 12h12l1-12"/>
+                </svg>
+            </button>
+        `;
+
+                preview.appendChild(div);
+            });
+        }
+
+        // REMOVE ONE FILE
+        function removeFile(index) {
+            files.splice(index, 1);
+            renderPreview();
+        }
+
+        // CANCEL ALL
+        function cancelAll() {
+            files = [];
+            document.getElementById("fileInput").value = "";
+            renderPreview();
+        }
+
+        // MESSAGE
+        function showMessage(text, success = true) {
+            let msg = document.getElementById("statusMsg");
+            msg.classList.remove("hidden");
+
+            if (success) {
+                msg.className = "text-green-600 flex items-center gap-2 mb-3";
+                msg.innerHTML = `
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="3"
+                 viewBox="0 0 24 24">
+                <path d="M5 13l4 4L19 7"/>
+            </svg>
+            ${text}
+        `;
+            } else {
+                msg.className = "text-red-500 flex items-center gap-2 mb-3";
+                msg.innerHTML = `
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="3"
+                 viewBox="0 0 24 24">
+                <path d="M6 18L18 6M6 6l12 12"/>
+            </svg>
+            ${text}
+        `;
+            }
+        }
+
+        // UPLOAD
+        function uploadFiles() {
+
+            if (files.length === 0) {
+                showMessage("No file selected", false);
+                return;
+            }
+
+            let formData = new FormData();
+
+            files.forEach(file => {
+                formData.append("files", file);
+            });
+
+            fetch("/upload?token={{ token }}", {
+                method: "POST",
+                body: formData
+            })
+                .then(res => {
+                    if (res.ok) {
+                        showMessage("Files uploaded successfully");
+                        cancelAll();
+                    } else {
+                        showMessage("Upload failed, try again", false);
+                    }
+                })
+                .catch(() => {
+                    showMessage("Upload failed, try again", false);
+                });
+        }
+    </script>
+
+</body>
+
+</html>
