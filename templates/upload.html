@@ -119,11 +119,16 @@
                 div.classList.add("hover:bg-gray-200");
                 div.innerHTML = `
             <span class="truncate w-48 block">${file.name}</span>
-            <button onclick="removeFile(${index})">
-                <svg class="w-5 h-5 text-pink-500" fill="none" stroke="currentColor" stroke-width="2"
-                     viewBox="0 0 24 24">
-                    <path d="M19 7L5 7M10 11v6M14 11v6M9 7V4h6v3M5 7l1 12h12l1-12"/>
-                </svg>
+            <button onclick="removeFile(${index})" 
+               class="p-1 rounded-full hover:bg-red-100 transition">
+
+               <svg class="w-6 h-6 text-pink-500" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+               <path d="M3 6h18"/>
+               <path d="M8 6V4h8v2"/>
+               <path d="M19 6l-1 14H6L5 6"/>
+               <path d="M10 11v6"/>
+               <path d="M14 11v6"/>
+               </svg>
             </button>
         `;
 
