@@ -1,7 +1,47 @@
 from flask import Flask, render_template, request, redirect, send_from_directory
 import os, shutil, socket, qrcode, webbrowser, random, string 
-from datetime import *
+from pystray import Icon, MenuItem, Menu
+from PIL import Image, ImageDraw
+import time
+import datetime 
 import uuid
+import sys
+import threading
+
+
+def resource_path(relative_path):
+    try:
+        base_path = sys._MEIPASS  # PyInstaller temp folder
+    except Exception:
+        base_path = os.path.abspath(".")
+
+    return os.path.join(base_path, relative_path)
+
+def create_icon():
+    img = Image.new('RGB', (64, 64), color=(0, 150, 136))
+    d = ImageDraw.Draw(img)
+    d.text((20, 20), "A", fill=(255, 255, 255))
+    return img
+
+def open_app(icon, item):
+    webbrowser.open(f"http://{ip}:5000")
+
+def stop_app(icon, item):
+    icon.stop()
+    os._exit(0)   
+
+def run_tray():
+    icon = Icon(
+        "AirDropApp",
+        create_icon(),
+        "AirDrop App",
+        menu=Menu(
+            MenuItem("Open Dashboard", open_app),
+            MenuItem("Exit", stop_app)
+        )
+    )
+    icon.run()
+
 
 def get_file_data(folder, filename, status):
     path = os.path.join(folder, filename)
@@ -12,8 +52,9 @@ def get_file_data(folder, filename, status):
     return {
         "name": filename,
         "status": status,
-        "time": dt.strftime("%I:%M %p"),
-        "date": dt.strftime("%d/%m/%Y")
+        "time": dt.strftime("%H:%M"),
+        "date": dt.strftime("%d/%m/%Y"),
+        "timestamp": timestamp   
     }
 
 app = Flask(__name__)
@@ -49,7 +90,7 @@ def generate_qr(ip):
 
     url = url = f"http://{ip}:5000/new"
     img = qrcode.make(url)
-    img.save("static/qr.png")
+    img.save(resource_path("static/qr.png"))
 
 # ---------------- ROUTES ----------------
 
@@ -83,7 +124,7 @@ def upload():
     token = request.args.get('token')
 
     if not token:
-        return "Token missing ❌"
+        return "Token missing "
 
     if request.method == 'POST':
         files = request.files.getlist("files")
@@ -109,6 +150,10 @@ def dashboard():
 
     for f in accepted_files:
         files.append(get_file_data(ACCEPTED, f, "accepted"))
+
+    files.sort(
+    key=lambda x: (x["status"] != "pending", -x["timestamp"])
+    )
 
     ip = get_ip()
 
@@ -143,6 +188,15 @@ def download(filename):
 def print_file(filename):
     return send_from_directory(ACCEPTED, filename)
 
+@app.route('/delete/<filename>')
+def delete_file(filename):
+    path = os.path.join(ACCEPTED, filename)
+
+    if os.path.exists(path):
+        os.remove(path)
+
+    return redirect('/dashboard')
+
 
 def cleanup(folder, seconds=86400):  # 1 day
     now = time.time()
@@ -154,17 +208,24 @@ def cleanup(folder, seconds=86400):  # 1 day
             if now - os.path.getmtime(path) > seconds:
                 os.remove(path)
 
-# ---------------- RUN ----------------
+#---------------- RUN ----------------
+def open_browser(ip):
+    time.sleep(2)
+    webbrowser.open(f"http://{ip}:5000")
 
 if __name__ == '__main__':
     ip = get_ip()
-    generate_qr(ip)
-
+    
     cleanup("uploads/accepted")
     cleanup("uploads/pending")
     generate_qr(ip)
 
+    threading.Thread(
+        target=lambda: app.run(host='0.0.0.0', port=5000, debug=False),
+        daemon=True
+    ).start()
 
-    webbrowser.open(f"http://{ip}:5000")
 
-    app.run(host='0.0.0.0', port=5000, debug=True)
+    threading.Thread(target=open_browser, args=(ip,)).start()
+   
+    run_tray()

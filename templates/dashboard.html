@@ -31,7 +31,7 @@
                         <circle cx="11" cy="11" r="8" />
                         <path d="M21 21l-4.3-4.3" />
                     </svg>
-                    <input type="text" placeholder="Search" class="outline-none w-full text-purple-500 bg-transparent">
+                    <input id="searchInput" type="text" placeholder="Search" class="outline-none w-full text-purple-500 bg-transparent">
                 </div>
 
                 <!-- FILTER -->
@@ -132,8 +132,10 @@
 
                 {% for file in files %}
 
-            <div class="grid grid-cols-5 items-center bg-white rounded-2xl p-5 mb-4 text-center 
-                        border border-gray-200 shadow-md hover:shadow-lg transition duration-200">
+            <div class="file-row grid grid-cols-5 items-center bg-white rounded-2xl p-5 mb-4 text-center 
+                        border border-gray-200 shadow-md hover:shadow-lg transition duration-200"
+                        data-token="{{ file.name.split('_')[0] }}"
+                        data-file="{{ file.name.split('_')[1] }}">
                     <!-- TOKEN -->
                     <div class="text-teal-600 font-semibold text-lg">
                         {{ file.name.split('_')[0] }}
@@ -180,20 +182,38 @@
                             </div>
                         </a>
 
+                        
                         {% else %}
-
+                        
                         <!-- PRINT -->
                         <a href="/print/{{ file.name }}">
                             <span class="text-2xl">🖨</span>
                         </a>
-
+                        
                         <!-- DOWNLOAD -->
                         <a href="/download/{{ file.name }}">
                             <div class="w-8 h-8 flex items-center justify-center bg-green-500 rounded-full text-white">
                                 ⬇
                             </div>
                         </a>
-
+                        
+                        <!-- DELETE -->
+                        <a href="/delete/{{ file.name }}" onclick="return confirm('Delete this file?')">
+                        
+                            <div class="w-9 h-9 flex items-center justify-center 
+                                        bg-red-500 rounded-full 
+                                        shadow-md hover:shadow-lg 
+                                        hover:bg-red-600 
+                                        hover:scale-110 
+                                        transition duration-200 cursor-pointer">
+                        
+                                <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                    <path d="M19 7L5 7M10 11v6M14 11v6M9 7V4h6v3M5 7l1 12h12l1-12" />
+                                </svg>
+                        
+                            </div>
+                        
+                        </a>
                         {% endif %}
 
                     </div>
@@ -229,6 +249,23 @@
 
             });
     }, 2000);
+    document.getElementById("searchInput").addEventListener("input", function () {
+
+            let value = this.value.toLowerCase();
+            let rows = document.querySelectorAll(".file-row");
+
+            rows.forEach(row => {
+                let token = row.dataset.token.toLowerCase();
+                let file = row.dataset.file.toLowerCase();
+
+                if (token.includes(value) || file.includes(value)) {
+                    row.style.display = "grid";
+                } else {
+                    row.style.display = "none";
+                }
+            });
+
+        });
 </script>
 
 </html>
