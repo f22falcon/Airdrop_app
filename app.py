@@ -7,6 +7,33 @@ import datetime
 import uuid
 import sys
 import threading
+import customtkinter as ctk
+
+
+
+
+# Windows only shortcut
+def create_shortcut():
+    try:
+        import winshell
+        from win32com.client import Dispatch
+
+        desktop = winshell.desktop()
+        path = os.path.join(desktop, "AirDrop App.lnk")
+
+        target = os.path.abspath(sys.executable)  # IMPORTANT for EXE
+
+        shell = Dispatch('WScript.Shell')
+        shortcut = shell.CreateShortCut(path)
+        shortcut.Targetpath = target
+        shortcut.WorkingDirectory = os.getcwd()
+        shortcut.IconLocation = target
+        shortcut.save()
+
+    except:
+        pass  # ignore on Linux
+
+
 
 
 def resource_path(relative_path):
@@ -17,30 +44,16 @@ def resource_path(relative_path):
 
     return os.path.join(base_path, relative_path)
 
-def create_icon():
-    img = Image.new('RGB', (64, 64), color=(0, 150, 136))
-    d = ImageDraw.Draw(img)
-    d.text((20, 20), "A", fill=(255, 255, 255))
-    return img
+
+
+ctk.set_appearance_mode("light")
+ctk.set_default_color_theme("blue")
+
 
 def open_app(icon, item):
     webbrowser.open(f"http://{ip}:5000")
 
-def stop_app(icon, item):
-    icon.stop()
-    os._exit(0)   
 
-def run_tray():
-    icon = Icon(
-        "AirDropApp",
-        create_icon(),
-        "AirDrop App",
-        menu=Menu(
-            MenuItem("Open Dashboard", open_app),
-            MenuItem("Exit", stop_app)
-        )
-    )
-    icon.run()
 
 
 def get_file_data(folder, filename, status):
@@ -59,8 +72,10 @@ def get_file_data(folder, filename, status):
 
 app = Flask(__name__)
 
-PENDING = "uploads/pending"
-ACCEPTED = "uploads/accepted"
+BASE_DIR = os.path.dirname(sys.executable) if getattr(sys, 'frozen', False) else os.path.abspath(".")
+
+PENDING = os.path.join(BASE_DIR, "uploads/pending")
+ACCEPTED = os.path.join(BASE_DIR, "uploads/accepted")
 
 os.makedirs(PENDING, exist_ok=True)
 os.makedirs(ACCEPTED, exist_ok=True)
@@ -197,6 +212,97 @@ def delete_file(filename):
 
     return redirect('/dashboard')
 
+def launch_control_panel(ip):
+
+    def open_dashboard():
+        webbrowser.open(f"http://{ip}:5000")
+
+    def quit_app():
+        app.destroy()
+        os._exit(0)
+
+    # MAIN WINDOW
+    app = ctk.CTk()
+    app.geometry("320x220")
+    app.title("AirDrop App")
+    app.resizable(False, False)
+
+    # ICON
+    try:
+        icon_path = os.path.join(BASE_DIR, "static/icon.ico")
+        app.iconbitmap(icon_path)
+    except:
+        pass
+
+    # BODY (CREATE FIRST ✅)
+    body = ctk.CTkFrame(app, fg_color="white")
+    body.pack(fill="both", expand=True)
+
+    try:
+     # Windows
+     ico_path = os.path.join(BASE_DIR, "static/icon.ico")
+     app.iconbitmap(ico_path)
+    except:
+      try:
+        # Linux fallback
+        png_path = os.path.join(BASE_DIR, "static/icon.png")
+        img = Image.open(png_path)
+        app.iconphoto(True, ctk.CTkImage(light_image=img)._light_image)
+      except:
+        pass
+      
+    # TEXT
+    label = ctk.CTkLabel(
+        body,
+        text="Server is running.........",
+        text_color="#7B5CF5",
+        font=("Arial", 20)
+    )
+    label.pack(pady=15)
+
+    label = ctk.CTkLabel(
+        body,
+        text="to launch dashboard click launh",
+        text_color="Black",
+        font=("Calibary", 10)
+    )
+    label.pack(pady=15,padx=5)
+
+    # BUTTON FRAME
+    btn_frame = ctk.CTkFrame(body, fg_color="white")
+    btn_frame.pack(pady=15)
+
+    # RELAUNCH BUTTON
+    launch_btn = ctk.CTkButton(
+        btn_frame,
+        text="LAUNCH",
+        width=120,
+        height=42,
+        corner_radius=20,
+        fg_color="#B8E986",
+        text_color="black",
+        hover_color="#a3d974",
+        font=("Arial", 11, "bold"),
+        command=open_dashboard
+    )
+    launch_btn.grid(row=0, column=0, padx=12)
+
+    # QUIT BUTTON
+    quit_btn = ctk.CTkButton(
+        btn_frame,
+        text="QUIT",
+        width=120,
+        height=42,
+        corner_radius=20,
+        fg_color="#F36C6C",
+        text_color="black",
+        hover_color="#e25555",
+        font=("Arial", 11, "bold"),
+        command=quit_app
+    )
+    quit_btn.grid(row=0, column=1, padx=12)
+
+    app.mainloop()
 
 def cleanup(folder, seconds=86400):  # 1 day
     now = time.time()
@@ -220,12 +326,27 @@ if __name__ == '__main__':
     cleanup("uploads/pending")
     generate_qr(ip)
 
+    desktop = os.path.join(os.path.expanduser("~"), "Desktop")
+    shortcut_path = os.path.join(desktop, "AirDrop App.lnk")
+
+    if sys.platform == "win32" and not os.path.exists(shortcut_path):
+      create_shortcut()
+
+
     threading.Thread(
         target=lambda: app.run(host='0.0.0.0', port=5000, debug=False),
         daemon=True
     ).start()
 
+    launch_control_panel(ip)
 
-    threading.Thread(target=open_browser, args=(ip,)).start()
-   
-    run_tray()
+
+# pyinstaller --onefile --noconsole ^
+# --icon=icon.ico ^
+# --hidden-import customtkinter ^
+# --hidden-import winshell ^
+# --hidden-import win32com ^
+# --add-data "templates;templates" ^
+# --add-data "static;static" ^
+# app.py
+# pip install winshell pywin32
