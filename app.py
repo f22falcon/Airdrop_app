@@ -341,12 +341,3 @@ if __name__ == '__main__':
     launch_control_panel(ip)
 
 
-# pyinstaller --onefile --noconsole ^
-# --icon=icon.ico ^
-# --hidden-import customtkinter ^
-# --hidden-import winshell ^
-# --hidden-import win32com ^
-# --add-data "templates;templates" ^
-# --add-data "static;static" ^
-# app.py
-# pip install winshell pywin32
