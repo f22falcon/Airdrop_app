@@ -2,27 +2,45 @@
 <html>
 
 <head>
-    <link href="{{ url_for('static', filename='tailwind.css') }}" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+
+   
+
 </head>
 
 <body class="bg-gray-200">
 
     <!-- TOP BAR -->
-    <div class="bg-green-400 h-16 w-full"></div>
+    <div class="w-full h-16 bg-gradient-to-r from-pink-400 to-yellow-400"></div>
 
-    <div class="w-full max-w-[1400px] mx-auto p-4 md:p-6 flex flex-col md:flex-row gap-6">
 
-        <!-- QR -->
-        <div class="w-full md:w-[300px] bg-white shadow p-4 text-center border">
-            <img src="/static/qr.png" class="w-full mb-4">
-            <p class="text-blue-400 text-xl font-semibold">scan it</p>
-        </div>
+    <div class="w-full max-w-[1920px] mx-auto p-6 md:p-6 flex flex-col md:flex-row gap-6">
 
+        
+        
         <!-- DASHBOARD -->
-        <div class="flex-1 bg-white shadow p-6">
-
+        <div class="flex-1 bg-white shadow p-6  flex flex-col">
+            
             <!-- SEARCH + FILTER -->
-            <div class="flex justify-end items-center mb-4 gap-4">
+            <div class="flex justify-between items-center mb-8" w-full>
+                <!-- MODE TOGGLE -->
+               
+               <div id="modeToggle" class="w-[128px] h-[45px] bg-gradient-to-r from-pink-400 to-purple-500 
+                   rounded-full flex items-center px-2 cursor-pointer transition-all duration-300">
+        
+                   <!-- CIRCLE -->
+                  <div id="toggleCircle" 
+                   class="w-[30px] h-[30px] bg-white rounded-full shadow-md transition-all duration-300">
+                  </div>
+        
+                <!-- TEXT -->
+                <span id="toggleText" 
+                  class="text-black font-semibold text-sm mx-2">
+                  Upload
+                </span>
+        
+            </div>
+            <div class="flex items-center gap-4 ml-auto">
 
                 <!-- SEARCH -->
                 <div class="flex items-center border border-purple-300 rounded-full px-4 py-1 w-full md:w-[250px]">
@@ -31,203 +49,218 @@
                         <circle cx="11" cy="11" r="8" />
                         <path d="M21 21l-4.3-4.3" />
                     </svg>
-                    <input id="searchInput" type="text" placeholder="Search" class="outline-none w-full text-purple-500 bg-transparent">
+                    <input id="searchInput" type="text" placeholder="Search"
+                        class="outline-none w-full text-purple-500 bg-transparent">
                 </div>
 
                 <!-- FILTER -->
                 <svg class="w-6 h-6 cursor-pointer" fill="none" stroke="black" stroke-width="2" viewBox="0 0 24 24">
                     <path d="M3 6h18M6 12h12M10 18h4" />
                 </svg>
-            </div>
-        <div class="overflow-x-auto">
-            <!-- HEADER -->
-            <div
-                class="bg-blue-300 p-4 rounded-t-xl grid grid-cols-5 text-center text-purple-600 font-semibold text-lg shadow-mt">
-
-                <div class="flex justify-center items-center gap-1">
-                    Token
-                    <div class="flex flex-col items-center text-purple-500">
-                    
-                        <span class="flex items-center justify-center w-[14px] h-[9px] text-[10px] leading-none">
-                            ▲
-                        </span>
-                    
-                        <span class="flex items-center justify-center w-[14px] h-[10px] text-[10px] leading-none">
-                            ▼
-                        </span>
-                    
-                    </div>
-                </div>
-
-                <div class="flex justify-center items-center gap-1">
-                    File
-                    <div class="flex flex-col items-center text-purple-500">
-                    
-                        <span class="flex items-center justify-center w-[14px] h-[10px] text-[10px] leading-none">
-                            ▲
-                        </span>
-                    
-                        <span class="flex items-center justify-center w-[14px] h-[10px] text-[10px] leading-none">
-                            ▼
-                        </span>
-                    
-                    </div>
-                </div>
-
-                <div class="flex justify-center items-center gap-1">
-                    Time
-                    <div class="flex flex-col items-center text-purple-500">
-                    
-                        <span class="flex items-center justify-center w-[14px] h-[10px] text-[10px] leading-none">
-                            ▲
-                        </span>
-                    
-                        <span class="flex items-center justify-center w-[14px] h-[10px] text-[10px] leading-none">
-                            ▼
-                        </span>
-                    
-                    </div>
-                </div>
-
-                <div class="flex justify-center items-center gap-1">
-                    Date
-                    <div class="flex flex-col items-center text-purple-500">
-                    
-                        <span class="flex items-center justify-center w-[14px] h-[10px] text-[10px] leading-none">
-                            ▲
-                        </span>
-                    
-                        <span class="flex items-center justify-center w-[14px] h-[10px] text-[10px] leading-none">
-                            ▼
-                        </span>
-                    
-                    </div>
-                </div>
-
-                <div class="flex justify-center items-center gap-1">
-                    Action
-                    <div class="flex flex-col items-center text-purple-500">
-                    
-                        <span class="flex items-center justify-center w-[14px] h-[10px] text-[10px] leading-none">
-                            ▲
-                        </span>
-                    
-                        <span class="flex items-center justify-center w-[14px] h-[10px] text-[10px] leading-none">
-                            ▼
-                        </span>
-                    
-                    </div>
-                </div>
-
-            </div>
-
-            <!-- BODY -->
-            <div class="max-h-[70vh] overflow-y-auto p-3 md:p-4 bg-gray-100 rounded shadow-md">
-
-                {% if files|length == 0 %}
-                <div class="flex justify-center items-center h-full min-h-[400px]">
-                    <img src="/static/empty.png" class="w-32">
-                </div>
-                {% endif %}
-
-                {% for file in files %}
-
-            <div class="file-row grid grid-cols-5 items-center bg-white rounded-2xl p-5 mb-4 text-center 
-                        border border-gray-200 shadow-md hover:shadow-lg transition duration-200"
-                        data-token="{{ file.name.split('_')[0] }}"
-                        data-file="{{ file.name.split('_')[1] }}">
-                    <!-- TOKEN -->
-                    <div class="text-teal-600 font-semibold text-lg">
-                        {{ file.name.split('_')[0] }}
-                    </div>
-
-                    <!-- FILE -->
-                    <div class="truncate text-gray-700 px-2 max-w-[120px] md:max-w-none">
-                        {{ file.name.split('_')[1] }}
-                    </div>
-
-                    <!-- TIME -->
-                    <div class="text-purple-500 font-medium">
-                        {{ file.time }}
-                    </div>
-                    
-
-                    <!-- Date -->
-                    <div class="text-purple-500 font-medium">
-                        {{ file.date }}
-                    </div>
-
-                    <!-- ACTION -->
-                    <div class="flex justify-center gap-4">
-
-                        {% if file.status == "pending" %}
-
-                        <!-- ACCEPT -->
-                        <a href="/accept/{{ file.name }}">
-                            <div class="w-8 h-8 flex items-center justify-center bg-green-500 rounded-full">
-                                <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" stroke-width="3"
-                                    viewBox="0 0 24 24">
-                                    <path d="M5 13l4 4L19 7" />
-                                </svg>
-                            </div>
-                        </a>
-
-                        <!-- REJECT -->
-                        <a href="/reject/{{ file.name }}">
-                            <div class="w-8 h-8 flex items-center justify-center bg-red-500 rounded-full">
-                                <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" stroke-width="3"
-                                    viewBox="0 0 24 24">
-                                    <path d="M6 18L18 6M6 6l12 12" />
-                                </svg>
-                            </div>
-                        </a>
-
-                        
-                        {% else %}
-                        
-                        <!-- PRINT -->
-                        <a href="/print/{{ file.name }}">
-                            <span class="text-2xl">🖨</span>
-                        </a>
-                        
-                        <!-- DOWNLOAD -->
-                        <a href="/download/{{ file.name }}">
-                            <div class="w-8 h-8 flex items-center justify-center bg-green-500 rounded-full text-white">
-                                ⬇
-                            </div>
-                        </a>
-                        
-                        <!-- DELETE -->
-                        <a href="/delete/{{ file.name }}" onclick="return confirm('Delete this file?')">
-                        
-                            <div class="w-9 h-9 flex items-center justify-center 
-                                        bg-red-500 rounded-full 
-                                        shadow-md hover:shadow-lg 
-                                        hover:bg-red-600 
-                                        hover:scale-110 
-                                        transition duration-200 cursor-pointer">
-                        
-                                <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                                    <path d="M19 7L5 7M10 11v6M14 11v6M9 7V4h6v3M5 7l1 12h12l1-12" />
-                                </svg>
-                        
-                            </div>
-                        
-                        </a>
-                        {% endif %}
-
-                    </div>
-
-                </div>
-
-                {% endfor %}
 
             </div>
 
         </div>
 
-    </div>
+        <div class="flex flex-1 gap-4 ">
+        
+            <!-- QR INSIDE -->
+            <div class="w-[360px] bg-white-100 rounded-xl   border border-gray-300 p-4 flex flex-col items-center justify-start ">
+                <img src="/static/qr.png" class="w-full mb-3">
+                <p class="text-blue-400 text-2xl font-bold text-center">scan it</p>
+            </div>
+        
+            <!-- TABLE SIDE -->
+            <div class="flex-1 flex flex-col ">
+        
+            <!-- HEADER -->
+            <div class="bg-blue-300 p-4 rounded-t-xl grid grid-cols-5 text-center text-purple-600 font-semibold text-lg shadow-mt">
+            
+                <div class="flex justify-center items-center gap-1">
+                    Token
+                    <div class="flex flex-col items-center text-purple-500">
+            
+                        <span class="flex items-center justify-center w-[14px] h-[9px] text-[10px] leading-none">
+                            ▲
+                        </span>
+            
+                        <span class="flex items-center justify-center w-[14px] h-[10px] text-[10px] leading-none">
+                            ▼
+                        </span>
+            
+                    </div>
+                </div>
+            
+                <div class="flex justify-center items-center gap-1">
+                    File
+                    <div class="flex flex-col items-center text-purple-500">
+            
+                        <span class="flex items-center justify-center w-[14px] h-[10px] text-[10px] leading-none">
+                            ▲
+                        </span>
+            
+                        <span class="flex items-center justify-center w-[14px] h-[10px] text-[10px] leading-none">
+                            ▼
+                        </span>
+            
+                    </div>
+                </div>
+            
+                <div class="flex justify-center items-center gap-1">
+                    Time
+                    <div class="flex flex-col items-center text-purple-500">
+            
+                        <span class="flex items-center justify-center w-[14px] h-[10px] text-[10px] leading-none">
+                            ▲
+                        </span>
+            
+                        <span class="flex items-center justify-center w-[14px] h-[10px] text-[10px] leading-none">
+                            ▼
+                        </span>
+            
+                    </div>
+                </div>
+            
+                <div class="flex justify-center items-center gap-1">
+                    Date
+                    <div class="flex flex-col items-center text-purple-500">
+            
+                        <span class="flex items-center justify-center w-[14px] h-[10px] text-[10px] leading-none">
+                            ▲
+                        </span>
+            
+                        <span class="flex items-center justify-center w-[14px] h-[10px] text-[10px] leading-none">
+                            ▼
+                        </span>
+            
+                    </div>
+                </div>
+            
+                <div class="flex justify-center items-center gap-1">
+                    Action
+                    <div class="flex flex-col items-center text-purple-500">
+            
+                        <span class="flex items-center justify-center w-[14px] h-[10px] text-[10px] leading-none">
+                            ▲
+                        </span>
+            
+                        <span class="flex items-center justify-center w-[14px] h-[10px] text-[10px] leading-none">
+                            ▼
+                        </span>
+            
+                    </div>
+                </div>
+            
+            </div>
 
+        
+                <!-- BODY -->
+                <div class="min-h-[400px] max-h-[430px] overflow-y-auto p-4 bg-gray-100 rounded-b-xl shadow-md">
+                
+                    {% if files|length == 0 %}
+                    <div class="flex justify-center items-center h-full min-h-[400px]">
+                        <img src="/static/empty.png" class="w-32">
+                    </div>
+                    {% endif %}
+                
+                    {% for file in files %}
+                
+                    <div class="file-row grid grid-cols-5 items-center bg-white rounded-2xl p-5 mb-4 text-center 
+                                        border border-gray-200 shadow-md hover:shadow-lg transition duration-200"
+                        data-token="{{ file.name.split('_')[0] }}" data-file="{{ file.name.split('_')[1] }}">
+                        <!-- TOKEN -->
+                        <div class="text-teal-600 font-semibold text-lg">
+                            {{ file.name.split('_')[0] }}
+                        </div>
+                
+                        <!-- FILE -->
+                        <div class="truncate text-gray-700 px-2 max-w-[120px] md:max-w-none">
+                            {{ file.name.split('_')[1] }}
+                        </div>
+                
+                        <!-- TIME -->
+                        <div class="text-purple-500 font-medium">
+                            {{ file.time }}
+                        </div>
+                
+                
+                        <!-- Date -->
+                        <div class="text-purple-500 font-medium">
+                            {{ file.date }}
+                        </div>
+                
+                        <!-- ACTION -->
+                        <div class="flex justify-center gap-4">
+                
+                            {% if file.status == "pending" %}
+                
+                            <!-- ACCEPT -->
+                            <a href="/accept/{{ file.name }}">
+                                <div class="w-8 h-8 flex items-center justify-center bg-green-500 rounded-full">
+                                    <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" stroke-width="3"
+                                        viewBox="0 0 24 24">
+                                        <path d="M5 13l4 4L19 7" />
+                                    </svg>
+                                </div>
+                            </a>
+                
+                            <!-- REJECT -->
+                            <a href="/reject/{{ file.name }}">
+                                <div class="w-8 h-8 flex items-center justify-center bg-red-500 rounded-full">
+                                    <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" stroke-width="3"
+                                        viewBox="0 0 24 24">
+                                        <path d="M6 18L18 6M6 6l12 12" />
+                                    </svg>
+                                </div>
+                            </a>
+                
+                
+                            {% else %}
+                
+                            <!-- PRINT -->
+                            <a href="/print/{{ file.name }}">
+                                <span class="text-2xl">🖨</span>
+                            </a>
+                
+                            <!-- DOWNLOAD -->
+                            <a href="/download/{{ file.name }}">
+                                <div class="w-8 h-8 flex items-center justify-center bg-green-500 rounded-full text-white">
+                                    ⬇
+                                </div>
+                            </a>
+                
+                            <!-- DELETE -->
+                            <a href="/delete/{{ file.name }}" onclick="return confirm('Delete this file?')">
+                
+                                <div class="w-9 h-9 flex items-center justify-center 
+                                                        bg-red-500 rounded-full 
+                                                        shadow-md hover:shadow-lg 
+                                                        hover:bg-red-600 
+                                                        hover:scale-110 
+                                                        transition duration-200 cursor-pointer">
+                
+                                    <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" stroke-width="2"
+                                        viewBox="0 0 24 24">
+                                        <path d="M19 7L5 7M10 11v6M14 11v6M9 7V4h6v3M5 7l1 12h12l1-12" />
+                                    </svg>
+                
+                                </div>
+                
+                            </a>
+                            {% endif %}
+                
+                        </div>
+                
+                    </div>
+                
+                    {% endfor %}
+                
+            </div>
+                
+         </div>
+                
+    </div>
+                
 </body>
 <script>
     let lastUpdate = 0;
@@ -251,21 +284,58 @@
     }, 2000);
     document.getElementById("searchInput").addEventListener("input", function () {
 
-            let value = this.value.toLowerCase();
-            let rows = document.querySelectorAll(".file-row");
+        let value = this.value.toLowerCase();
+        let rows = document.querySelectorAll(".file-row");
 
-            rows.forEach(row => {
-                let token = row.dataset.token.toLowerCase();
-                let file = row.dataset.file.toLowerCase();
+        rows.forEach(row => {
+            let token = row.dataset.token.toLowerCase();
+            let file = row.dataset.file.toLowerCase();
 
-                if (token.includes(value) || file.includes(value)) {
-                    row.style.display = "grid";
-                } else {
-                    row.style.display = "none";
-                }
-            });
-
+            if (token.includes(value) || file.includes(value)) {
+                row.style.display = "grid";
+            } else {
+                row.style.display = "none";
+            }
         });
+
+    });
+    const toggle = document.getElementById("modeToggle");
+    const text = document.getElementById("toggleText");
+
+    const downloadMode = document.getElementById("downloadMode");
+    const uploadMode = document.getElementById("uploadMode");
+
+    let isUpload = true;
+
+    toggle.addEventListener("click", () => {
+
+        isUpload = !isUpload;
+
+        if (isUpload) {
+
+            // LEFT → Upload mode
+            toggle.classList.remove("flex-row-reverse");
+            text.innerText = "Upload";
+
+            toggle.classList.remove("from-blue-400", "to-green-400");
+            toggle.classList.add("from-pink-400", "to-purple-500");
+
+            uploadMode.classList.remove("hidden");
+            downloadMode.classList.add("hidden");
+
+        } else {
+
+            // RIGHT → Download mode
+            toggle.classList.add("flex-row-reverse");
+            text.innerText = "Download";
+
+            toggle.classList.remove("from-pink-400", "to-purple-500");
+            toggle.classList.add("from-blue-400", "to-green-400");
+
+            uploadMode.classList.add("hidden");
+            downloadMode.classList.remove("hidden");
+        }
+    });
 </script>
 
 </html>
