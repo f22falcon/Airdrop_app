@@ -8,164 +8,180 @@
 
 </head>
 
-<body class="bg-gray-200">
+<body class="bg-white-100">
 
     <!-- TOP BAR -->
-    <div class="w-full h-16 bg-gradient-to-r from-pink-400 to-yellow-400"></div>
+    <div class="w-full h-16 bg-gradient-to-r from-pink-400 to-yellow-400 shadow-lg"></div>
 
 
-    <div class="w-full max-w-[1920px] mx-auto p-6 md:p-6 flex flex-col md:flex-row gap-6">
+    <div class="w-full max-w-[1920px] p-6 md:p-6 flex flex-col md:flex-row gap-6">
 
         
         
-        <!-- DASHBOARD -->
-        <div class="flex-1 bg-white shadow p-6  flex flex-col">
+      <!-- DASHBOARD -->
+      <div class="flex-1 bg-white p-6  flex flex-col">
+
+          
             
-            <!-- SEARCH + FILTER -->
-            <div class="flex justify-between items-center mb-8" w-full>
+                <!-- SEARCH + FILTER -->
+                <div class="flex justify-between items-center mb-8" w-full>
                 <!-- MODE TOGGLE -->
                
-               <div id="modeToggle" class="w-[128px] h-[45px] bg-gradient-to-r from-pink-400 to-purple-500 
-                   rounded-full flex items-center px-2 cursor-pointer transition-all duration-300">
+                <div id="modeToggle" 
+                    class="w-[128px] h-[45px] bg-gradient-to-r from-pink-400 to-purple-500 
+                      rounded-full flex items-center px-2 cursor-pointer transition-all duration-300">
         
                    <!-- CIRCLE -->
-                  <div id="toggleCircle" 
-                   class="w-[30px] h-[30px] bg-white rounded-full shadow-md transition-all duration-300">
-                  </div>
+                    <div id="toggleCircle" 
+                        class="w-[30px] h-[30px] bg-white rounded-full shadow-md transition-all duration-300">
+                    </div>
         
-                <!-- TEXT -->
-                <span id="toggleText" 
-                  class="text-black font-semibold text-sm mx-2">
-                  Upload
-                </span>
+                    <!-- TEXT -->
+                   <span id="toggleText" class="text-black font-semibold text-sm mx-2">
+                         Download
+                   </span>
         
-            </div>
-            <div class="flex items-center gap-4 ml-auto">
-
-                <!-- SEARCH -->
-                <div class="flex items-center border border-purple-300 rounded-full px-4 py-1 w-full md:w-[250px]">
-                    <svg class="w-5 h-5 text-purple-400 mr-2" fill="none" stroke="currentColor" stroke-width="2"
-                        viewBox="0 0 24 24">
-                        <circle cx="11" cy="11" r="8" />
-                        <path d="M21 21l-4.3-4.3" />
-                    </svg>
-                    <input id="searchInput" type="text" placeholder="Search"
-                        class="outline-none w-full text-purple-500 bg-transparent">
                 </div>
 
-                <!-- FILTER -->
-                <svg class="w-6 h-6 cursor-pointer" fill="none" stroke="black" stroke-width="2" viewBox="0 0 24 24">
-                    <path d="M3 6h18M6 12h12M10 18h4" />
-                </svg>
+                <div class="flex items-center gap-4 ml-auto">
 
-            </div>
+                    <!-- SEARCH -->
+                    <div id="searchBox"  class="flex items-center border border-purple-300 rounded-full px-4 py-1 w-full md:w-[250px]">
+                        <svg class="w-5 h-5 text-purple-400 mr-2" fill="none" stroke="currentColor" stroke-width="2"
+                            viewBox="0 0 24 24">
+                            <circle cx="11" cy="11" r="8" />
+                            <path d="M21 21l-4.3-4.3" />
+                        </svg>
+                        <input id="searchInput" type="text" placeholder="Search"
+                          class="outline-none w-full text-purple-500 bg-transparent">
+                    </div>
+                    <div id="deviceBox" class="hidden">
+                      <select class="border border-purple-300 rounded-full px-4 py-1 w-[250px] text-purple-500">
+                       <option>Select Device</option>
+                       <option>Tanmoy's phone</option>
+                      </select>
+                    </div>
+
+                    <!-- FILTER -->
+                    <svg class="w-6 h-6 cursor-pointer" fill="none" stroke="black" stroke-width="2" 
+                        viewBox="0 0 24 24">
+                        <path d="M3 6h18M6 12h12M10 18h4" />
+                    </svg>
+
+                </div>
+           
 
         </div>
 
         <div class="flex flex-1 gap-4 ">
+          
+            <!-- DOWNLOAD MODE -->
+           
+               <!-- QR INSIDE -->
+               <div class="w-[360px] bg-white-100 rounded-xl   border border-gray-300 p-4 flex flex-col items-center justify-start ">
+                 <img src="/static/qr.png" class="w-full mb-3">
+                 <p class="text-blue-400 text-2xl font-bold text-center">scan it</p>
+               </div>
         
-            <!-- QR INSIDE -->
-            <div class="w-[360px] bg-white-100 rounded-xl   border border-gray-300 p-4 flex flex-col items-center justify-start ">
-                <img src="/static/qr.png" class="w-full mb-3">
-                <p class="text-blue-400 text-2xl font-bold text-center">scan it</p>
-            </div>
+               <!-- TABLE SIDE -->
+               <div class="flex-1 flex flex-col ">
+                 <!-- DOWNLOAD MODE -->
+                 <div id="downloadMode">
         
-            <!-- TABLE SIDE -->
-            <div class="flex-1 flex flex-col ">
-        
-            <!-- HEADER -->
-            <div class="bg-blue-300 p-4 rounded-t-xl grid grid-cols-5 text-center text-purple-600 font-semibold text-lg shadow-mt">
+                      <!-- HEADER -->
+                    <div class="bg-blue-300 p-4 rounded-t-xl grid grid-cols-5 text-center text-purple-600 font-semibold text-lg shadow-mt">
             
-                <div class="flex justify-center items-center gap-1">
-                    Token
-                    <div class="flex flex-col items-center text-purple-500">
+                        <div class="flex justify-center items-center gap-1">
+                          Token
+                          <div class="flex flex-col items-center text-purple-500">
             
-                        <span class="flex items-center justify-center w-[14px] h-[9px] text-[10px] leading-none">
-                            ▲
-                        </span>
+                            <span class="flex items-center justify-center w-[14px] h-[9px] text-[10px] leading-none">
+                              ▲
+                            </span>
             
-                        <span class="flex items-center justify-center w-[14px] h-[10px] text-[10px] leading-none">
-                            ▼
-                        </span>
+                            <span class="flex items-center justify-center w-[14px] h-[10px] text-[10px] leading-none">
+                              ▼
+                            </span>
+            
+                          </div>
+
+                        </div>
+            
+                       <div class="flex justify-center items-center gap-1">
+                          File
+                          <div class="flex flex-col items-center text-purple-500">
+            
+                            <span class="flex items-center justify-center w-[14px] h-[10px] text-[10px] leading-none">
+                              ▲
+                            </span>
+            
+                            <span class="flex items-center justify-center w-[14px] h-[10px] text-[10px] leading-none">
+                              ▼
+                            </span>
+            
+                          </div>
+                       </div>
+            
+                      <div class="flex justify-center items-center gap-1">
+                          Time
+                          <div class="flex flex-col items-center text-purple-500">
+            
+                            <span class="flex items-center justify-center w-[14px] h-[10px] text-[10px] leading-none">
+                              ▲
+                            </span>
+            
+                            <span class="flex items-center justify-center w-[14px] h-[10px] text-[10px] leading-none">
+                              ▼
+                            </span>
+            
+                          </div>
+                      </div>
+            
+                      <div class="flex justify-center items-center gap-1">
+                          Date
+                          <div class="flex flex-col items-center text-purple-500">
+            
+                            <span class="flex items-center justify-center w-[14px] h-[10px] text-[10px] leading-none">
+                              ▲
+                            </span>
+            
+                            <span class="flex items-center justify-center w-[14px] h-[10px] text-[10px] leading-none">
+                              ▼
+                            </span>
+            
+                          </div>
+                      </div>
+            
+                     <div class="flex justify-center items-center gap-1">
+                         Action
+                         <div class="flex flex-col items-center text-purple-500">
+            
+                           <span class="flex items-center justify-center w-[14px] h-[10px] text-[10px] leading-none">
+                             ▲
+                           </span>
+            
+                           <span class="flex items-center justify-center w-[14px] h-[10px] text-[10px] leading-none">
+                             ▼
+                           </span>
+            
+                          </div>
+                      </div>
             
                     </div>
-                </div>
-            
-                <div class="flex justify-center items-center gap-1">
-                    File
-                    <div class="flex flex-col items-center text-purple-500">
-            
-                        <span class="flex items-center justify-center w-[14px] h-[10px] text-[10px] leading-none">
-                            ▲
-                        </span>
-            
-                        <span class="flex items-center justify-center w-[14px] h-[10px] text-[10px] leading-none">
-                            ▼
-                        </span>
-            
-                    </div>
-                </div>
-            
-                <div class="flex justify-center items-center gap-1">
-                    Time
-                    <div class="flex flex-col items-center text-purple-500">
-            
-                        <span class="flex items-center justify-center w-[14px] h-[10px] text-[10px] leading-none">
-                            ▲
-                        </span>
-            
-                        <span class="flex items-center justify-center w-[14px] h-[10px] text-[10px] leading-none">
-                            ▼
-                        </span>
-            
-                    </div>
-                </div>
-            
-                <div class="flex justify-center items-center gap-1">
-                    Date
-                    <div class="flex flex-col items-center text-purple-500">
-            
-                        <span class="flex items-center justify-center w-[14px] h-[10px] text-[10px] leading-none">
-                            ▲
-                        </span>
-            
-                        <span class="flex items-center justify-center w-[14px] h-[10px] text-[10px] leading-none">
-                            ▼
-                        </span>
-            
-                    </div>
-                </div>
-            
-                <div class="flex justify-center items-center gap-1">
-                    Action
-                    <div class="flex flex-col items-center text-purple-500">
-            
-                        <span class="flex items-center justify-center w-[14px] h-[10px] text-[10px] leading-none">
-                            ▲
-                        </span>
-            
-                        <span class="flex items-center justify-center w-[14px] h-[10px] text-[10px] leading-none">
-                            ▼
-                        </span>
-            
-                    </div>
-                </div>
-            
-            </div>
 
         
-                <!-- BODY -->
-                <div class="min-h-[400px] max-h-[430px] overflow-y-auto p-4 bg-gray-100 rounded-b-xl shadow-md">
+                    <!-- BODY -->
+                    <div class="min-h-[400px] max-h-[430px] overflow-y-auto p-4 bg-gray-100 rounded-b-xl shadow-md">
                 
-                    {% if files|length == 0 %}
-                    <div class="flex justify-center items-center h-full min-h-[400px]">
+                      {% if files|length == 0 %}
+                      <div class="flex justify-center items-center h-full min-h-[400px]">
                         <img src="/static/empty.png" class="w-32">
-                    </div>
-                    {% endif %}
+                      </div>
+                      {% endif %}
                 
-                    {% for file in files %}
+                      {% for file in files %}
                 
-                    <div class="file-row grid grid-cols-5 items-center bg-white rounded-2xl p-5 mb-4 text-center 
+                      <div class="file-row grid grid-cols-5 items-center bg-white rounded-2xl p-5 mb-4 text-center 
                                         border border-gray-200 shadow-md hover:shadow-lg transition duration-200"
                         data-token="{{ file.name.split('_')[0] }}" data-file="{{ file.name.split('_')[1] }}">
                         <!-- TOKEN -->
@@ -216,7 +232,6 @@
                 
                 
                             {% else %}
-                
                             <!-- PRINT -->
                             <a href="/print/{{ file.name }}">
                                 <span class="text-2xl">🖨</span>
@@ -250,21 +265,178 @@
                             {% endif %}
                 
                         </div>
-                
-                    </div>
-                
                     {% endfor %}
+                    </div>
+
+                  </div>
+
+                </div>
+                
+                 <div id="uploadMode" class="hidden">
+
+                 <!-- SAME BODY AREA (NO HEADER CHANGE) -->
+                 <div class="bg-blue-300 p-4 rounded-t-xl grid grid-cols-5 text-center text-purple-600 font-semibold text-lg shadow-mt">
+                    <div></div>
+                    <div class="col-span-3 text-center">Upload Files</div>
+                    <div></div>
+
+                </div>
+                 <div class="min-h-[400px] max-h-[430px] overflow-hidden p-4 bg-gray-100 rounded-b-xl shadow-md">
+
+                  <div class="flex h-full justify-start pl-12 mt-3 gap-8">
+
+                       <div data-drop class="w-[580px] h-[320px] border-2 border-dashed border-gray-400 
+                       rounded-2xl flex flex-col items-center justify-center text-center 
+                       bg-white shadow-sm mt-10">
+
+                            <!-- UPLOAD ICON -->
+                            <img src="/static/Uploadicon.png" 
+                              class="w-16 h-16 mb-4 opacity-80">
+
+                            <!-- TEXT -->
+                            <p class="text-purple-500 text-xl font-semibold">Drag & Drop</p>
+
+                            <p class="my-2 text-gray-600">or</p>
+
+                            <!-- FILE INPUT -->
+                            <input type="file" id="fileInput" multiple class="hidden">
+
+                            <!-- BUTTON -->
+                            <button onclick="document.getElementById('fileInput').click()"
+                            class="mt-2 bg-gray-300 hover:bg-gray-400 px-5 py-2 rounded-xl transition">
+                            Choose File
+                            </button>
+
+                       </div>
+
+                       <div class="w-[2px] h-[300px] bg-gray-300 mt-12"></div>
+
+                        <div class="flex items-start gap-6">
+
+                           <div class="flex flex-col">
+                             <!-- LABEL -->
+                             <p class="font-semibold text-lg mb-2 text-left">Previews:</p>
+
+                             <div class="w-[520px] h-[320px] flex flex-col justify-between 
+                              bg-white border border-gray-300 rounded-2xl p-4 shadow-sm mt-1 ">
+
+                               <!-- FILE LIST -->
+                              
+                               <div id="previewList" class="flex flex-col gap-3 pr-2 max-h-[240px] overflow-y-auto">
+                                </div>
+                             </div>
+                           </div>
+                            <!-- BUTTON COLOUMN -->
+                             <div class="flex flex-col justify-end gap-4 h-[320px] mt-6">
+                                <!--send-->
+                                <button id="sendBtn" class="mt-3 bg-gradient-to-r from-blue-400 to-green-400 
+                                 text-white py-2 rounded-xl text-lg self-end w-[120px]">
+                                 Send
+                                </button>
+                                <!-- CANCEL-->
+                                 <button id="cancelBtn"  class="mt-3 bg-gradient-to-r from-red-400 to to-yellow-400 
+                                     text-white py-2 rounded-xl text-lg self-end w-[120px]
+                                    hover:bg-gray-400">
+                                    Cancel
+                                 </button>
+                             </div>
+
+                        </div>
+
+                    </div>
+                    
+                </div>
                 
             </div>
-                
-         </div>
-                
+            
+        </div>
+        
     </div>
-                
+    
+</div>
+
 </body>
+
 <script>
+    let selectedFiles = [];
     let lastUpdate = 0;
 
+    // ELEMENTS
+    const toggle = document.getElementById("modeToggle");
+    const fileInput = document.getElementById("fileInput");
+    const previewList = document.getElementById("previewList");
+    const text = document.getElementById("toggleText");
+    const dropBox = document.querySelector('[data-drop]');
+    const downloadMode = document.getElementById("downloadMode");
+    const uploadMode = document.getElementById("uploadMode"); 
+    const searchBox = document.getElementById("searchBox");
+    const deviceBox = document.getElementById("deviceBox");
+    
+    fileInput.addEventListener("change", () => {
+        const files = Array.from(fileInput.files);
+        addFiles(files);
+    });
+    
+   function addFiles(files) {
+      files.forEach(file => {
+        selectedFiles.push(file);
+       });
+
+      renderFiles();   // 🔥 IMPORTANT
+    }
+
+   function renderFiles() {
+
+      previewList.innerHTML = "";
+
+      selectedFiles.forEach((file, index) => {
+
+         const div = document.createElement("div");
+
+        div.className = "flex items-center justify-between bg-gray-200 px-4 py-3 rounded-xl text-lg gap-3";
+
+        div.innerHTML = `
+          <div class="flex items-center gap-3 min-w-0">
+          <img src="${getFileIcon(file.name)}" class="w-8 h-8">
+          <span class="truncate font-medium break-words overflow-hidden">
+            ${file.name}
+            </span>
+          </div>
+
+          <img src="/static/recycle_bin.png" 
+           class="w-6 h-6 cursor-pointer hover:scale-110 transition delete-btn"
+           data-index="${index}">
+        `;
+        previewList.appendChild(div);
+    });
+    document.getElementById("cancelBtn").addEventListener("click", () => {
+       selectedFiles = [];
+       renderFiles();
+    });
+    document.getElementById("sendBtn").addEventListener("click", () => {
+
+       if (selectedFiles.length === 0) {
+         alert("No files selected!");
+         return;
+        }
+
+        // FOR NOW (frontend complete)
+        alert(`${selectedFiles.length} file(s) ready to send`);
+
+        console.log("Files:", selectedFiles);
+
+    });
+    // DELETE BUTTON WORKS HERE 
+    document.querySelectorAll(".delete-btn").forEach(btn => {
+        btn.addEventListener("click", () => {
+            const index = btn.dataset.index;
+            selectedFiles.splice(index, 1);
+            renderFiles();
+        });
+    });
+  }
+
+    // CHECK SERVER UPDATES
     fetch('/check-updates')
         .then(res => res.json())
         .then(data => {
@@ -275,13 +447,13 @@
         fetch('/check-updates')
             .then(res => res.json())
             .then(data => {
-
                 if (data.last_update !== lastUpdate) {
                     location.reload();
                 }
-
             });
     }, 2000);
+
+    // SEARCH FUNCTION
     document.getElementById("searchInput").addEventListener("input", function () {
 
         let value = this.value.toLowerCase();
@@ -299,43 +471,89 @@
         });
 
     });
-    const toggle = document.getElementById("modeToggle");
-    const text = document.getElementById("toggleText");
 
-    const downloadMode = document.getElementById("downloadMode");
-    const uploadMode = document.getElementById("uploadMode");
+    dropBox.addEventListener("dragover", (e) => {
+         e.preventDefault();
+         dropBox.classList.add("border-purple-400");
+    });
 
-    let isUpload = true;
+    dropBox.addEventListener("dragleave", () => {
+         dropBox.classList.remove("border-purple-400");
+    });
 
-    toggle.addEventListener("click", () => {
+    dropBox.addEventListener("drop", (e) => {
+        e.preventDefault();
+        dropBox.classList.remove("border-purple-400");
 
-        isUpload = !isUpload;
+        const files = Array.from(e.dataTransfer.files);
+        addFiles(files);
+    });
 
-        if (isUpload) {
 
-            // LEFT → Upload mode
-            toggle.classList.remove("flex-row-reverse");
-            text.innerText = "Upload";
+    // DEFAULT MODE → DOWNLOAD
+    let isUpload = false;
 
-            toggle.classList.remove("from-blue-400", "to-green-400");
-            toggle.classList.add("from-pink-400", "to-purple-500");
+    // MAIN UI CONTROL FUNCTION
+    function updateUI() {
 
-            uploadMode.classList.remove("hidden");
-            downloadMode.classList.add("hidden");
+        if (!isUpload) {
+            // 🔵 DOWNLOAD MODE
 
-        } else {
-
-            // RIGHT → Download mode
             toggle.classList.add("flex-row-reverse");
             text.innerText = "Download";
 
-            toggle.classList.remove("from-pink-400", "to-purple-500");
-            toggle.classList.add("from-blue-400", "to-green-400");
-
-            uploadMode.classList.add("hidden");
             downloadMode.classList.remove("hidden");
+            uploadMode.classList.add("hidden");
+
+            searchBox.classList.remove("hidden");
+            deviceBox.classList.add("hidden");
+
+        } else {
+            // 🟣 UPLOAD MODE
+
+            toggle.classList.remove("flex-row-reverse");
+            text.innerText = "Upload";
+
+            downloadMode.classList.add("hidden");
+            uploadMode.classList.remove("hidden");
+
+            searchBox.classList.add("hidden");
+            deviceBox.classList.remove("hidden");
         }
+    }
+
+    // INITIAL LOAD
+    updateUI();
+
+    // TOGGLE CLICK
+    toggle.addEventListener("click", () => {
+        isUpload = !isUpload;
+        updateUI();
     });
+    function getFileIcon(filename) {
+       const ext = filename.split('.').pop().toLowerCase();
+
+      if (["doc", "docx"].includes(ext)) {
+        return "/static/docx_file.png";
+      } 
+      else if (["xls", "xlsx", "csv"].includes(ext)) {
+        return "/static/excel_file.png";
+      } 
+      else if (["pdf"].includes(ext)) {
+        return "/static/pdf_file.png";
+      } 
+      else if (["mp4", "mkv", "avi", "mov"].includes(ext)) {
+        return "/static/video_file.png";
+      } 
+      else if (["png","jpg","jpeg","heic"].includes(ext)) {
+         return "/static/image_file.png";
+      }
+      else {
+        return "/static/file_icon.png"; // default
+      }
+   }
+
+    
 </script>
 
 </html>
