@@ -8,9 +8,12 @@ import uuid
 import sys
 import threading
 import customtkinter as ctk
+from flask_socketio import SocketIO, emit
 
-
-
+app = Flask(__name__)
+socketio = SocketIO(app, cors_allowed_origins="*", async_mode="threading")
+devices = {}  
+# {device_id: {"sid": socket_id, "name": device_name}}
 
 # Windows only shortcut
 def create_shortcut():
@@ -38,7 +41,7 @@ def create_shortcut():
 
 def resource_path(relative_path):
     try:
-        base_path = sys._MEIPASS  # PyInstaller temp folder
+        base_path = sys._MEIPASS  
     except Exception:
         base_path = os.path.abspath(".")
 
@@ -70,15 +73,18 @@ def get_file_data(folder, filename, status):
         "timestamp": timestamp   
     }
 
-app = Flask(__name__)
+
 
 BASE_DIR = os.path.dirname(sys.executable) if getattr(sys, 'frozen', False) else os.path.abspath(".")
 
 PENDING = os.path.join(BASE_DIR, "uploads/pending")
 ACCEPTED = os.path.join(BASE_DIR, "uploads/accepted")
+Temp = os.path.join(BASE_DIR, "uploads/temp")
+
 
 os.makedirs(PENDING, exist_ok=True)
 os.makedirs(ACCEPTED, exist_ok=True)
+os.makedirs(Temp,exist_ok=True)
 
 # ---------------- TOKEN ----------------
 def generate_token(length=6):
@@ -103,15 +109,41 @@ def generate_qr(ip):
     global CURRENT_TOKEN
     CURRENT_TOKEN = generate_token()
 
-    url = url = f"http://{ip}:5000/new"
+    url = f"http://{ip}:5000/new"
     img = qrcode.make(url)
     img.save(resource_path("static/qr.png"))
+
+
+@socketio.on("register")
+def register(data):
+    print("Register",data)
+    device_id = data["id"]
+    name = data["name"]
+
+    devices[device_id] = {
+        "sid": request.sid,
+        "name": name
+    }
+
+    emit("device_list", devices, broadcast=True)
+
+
+@socketio.on("disconnect")
+def disconnect():
+    for d in list(devices):
+        if devices[d]["sid"] == request.sid:
+            del devices[d]
+
+    emit("device_list", devices, broadcast=True)
+
+
 
 # ---------------- ROUTES ----------------
 
 @app.route('/')
 def home():
     return redirect('/dashboard')
+
 
 @app.route('/new')
 def new_user():
@@ -138,18 +170,40 @@ def check_updates():
 def upload():
     token = request.args.get('token')
 
-    if not token:
-        return "Token missing "
-
+    
     if request.method == 'POST':
         files = request.files.getlist("files")
+        targets = request.form.getlist("targets")
+        print("TARGETS:", targets)
+        print("DEVICES:", devices)
+
 
         for file in files:
-            if file.filename:
-                filename = f"{token}_{file.filename}"
-                file.save(os.path.join(PENDING, filename))
+           
+           if file.filename:
 
-        return "OK"
+             unique_id = CURRENT_TOKEN
+             filename = f"{unique_id}_{file.filename}"
+
+             if targets:
+              path_temp=os.path.join(Temp,filename)
+              file.save(path_temp)
+              for target in targets:
+                if target in devices:
+
+                  socketio.emit(
+                    "incoming_file",
+                    {
+                        "filename": file.filename,
+                        "stored": filename
+                    },
+                    room=devices[target]["sid"]
+                )
+             else:
+                path = os.path.join(PENDING, filename)
+                file.save(path)
+                file_data=get_file_data(PENDING,filename,"pending")
+                socketio.emit("new_file",file_data)
 
     return render_template("upload.html", token=token)
 
@@ -183,8 +237,13 @@ def accept(filename):
 
     if os.path.exists(src):
         shutil.move(src, dst)
-
-    return redirect('/dashboard')
+        file_data=get_file_data(ACCEPTED,filename,"accepted")
+        socketio.emit("file_update",{
+          "action":"accepted",
+          "file":filename,
+          "data":file_data
+        })
+    return "OK"
 
 @app.route('/reject/<filename>')
 def reject(filename):
@@ -193,11 +252,17 @@ def reject(filename):
     if os.path.exists(path):
         os.remove(path)
 
-    return redirect('/dashboard')
+        socketio.emit("file_update",{
+          "action":"rejected",
+          "file":filename
+        })
+    return "OK"
 
 @app.route('/download/<filename>')
 def download(filename):
-    return send_from_directory(ACCEPTED, filename, as_attachment=True)
+    real_name = filename.split("_", 1)[1] if "_" in filename else filename
+
+    return send_from_directory(ACCEPTED, filename, as_attachment=True,download_name=real_name)
 
 @app.route('/print/<filename>')
 def print_file(filename):
@@ -205,12 +270,30 @@ def print_file(filename):
 
 @app.route('/delete/<filename>')
 def delete_file(filename):
-    path = os.path.join(ACCEPTED, filename)
+    path1 = os.path.join(ACCEPTED, filename)
+    path2= os.path.join(PENDING, filename)
 
-    if os.path.exists(path):
-        os.remove(path)
-
+    if os.path.exists(path1):
+        os.remove(path1)
+    if os.path.exists(path2):
+        os.remove(path2)
+    
+  
     return redirect('/dashboard')
+@app.route('/temp-download/<filename>')
+def temp_download(filename):
+    temp_path=os.path.join(Temp,filename)
+    if os.path.exists(temp_path):
+      return send_from_directory(Temp,filename,as_attachment=True)
+    return "File not found",404
+
+@app.route('/temp-delete/<filename>')
+def temp_delete(filename):
+    temp_path=os.path.join(Temp,filename)
+    if os.path.exists(temp_path):
+        os.remove(temp_path)
+    return "OK"
+
 
 def launch_control_panel(ip):
 
@@ -332,10 +415,15 @@ if __name__ == '__main__':
     if sys.platform == "win32" and not os.path.exists(shortcut_path):
       create_shortcut()
 
-
     threading.Thread(
-        target=lambda: app.run(host='0.0.0.0', port=5000, debug=False),
-        daemon=True
+      target=lambda: socketio.run(
+        app,
+        host='0.0.0.0',
+        port=5000,
+        debug=False,
+        use_reloader=False
+      ),
+      daemon=True
     ).start()
 
     launch_control_panel(ip)

@@ -2,9 +2,9 @@
 <html>
 
 <head>
+    <script src="https://cdn.socket.io/4.0.1/socket.io.min.js"></script>
     <script src="https://cdn.tailwindcss.com"></script>
-
-   
+    
 
 </head>
 
@@ -56,9 +56,8 @@
                           class="outline-none w-full text-purple-500 bg-transparent">
                     </div>
                     <div id="deviceBox" class="hidden">
-                      <select class="border border-purple-300 rounded-full px-4 py-1 w-[250px] text-purple-500">
-                       <option>Select Device</option>
-                       <option>Tanmoy's phone</option>
+                      <select id="deviceSelect" multiple
+                      class="border border-purple-300 rounded-xl px-3 py-2  w-[250px] h-[80px]text-purple-500 overflow-y-auto">
                       </select>
                     </div>
 
@@ -171,19 +170,19 @@
 
         
                     <!-- BODY -->
-                    <div class="min-h-[400px] max-h-[430px] overflow-y-auto p-4 bg-gray-100 rounded-b-xl shadow-md">
-                
+                    <div id="fileContainer" class="min-h-[400px] max-h-[430px] overflow-y-auto p-4 bg-gray-100 rounded-b-xl shadow-md">
+                  
                       {% if files|length == 0 %}
-                      <div class="flex justify-center items-center h-full min-h-[400px]">
+                      <div id= "emptyState" class="flex justify-center items-center h-full min-h-[400px]">
                         <img src="/static/empty.png" class="w-32">
                       </div>
                       {% endif %}
                 
                       {% for file in files %}
-                
+                     
                       <div class="file-row grid grid-cols-5 items-center bg-white rounded-2xl p-5 mb-4 text-center 
                                         border border-gray-200 shadow-md hover:shadow-lg transition duration-200"
-                        data-token="{{ file.name.split('_')[0] }}" data-file="{{ file.name.split('_')[1] }}">
+                        data-token="{{ file.name.split('_')[0]}}" data-file="{{ file.name.split('_')[1] }}">
                         <!-- TOKEN -->
                         <div class="text-teal-600 font-semibold text-lg">
                             {{ file.name.split('_')[0] }}
@@ -211,24 +210,24 @@
                             {% if file.status == "pending" %}
                 
                             <!-- ACCEPT -->
-                            <a href="/accept/{{ file.name }}">
+                            <div onclick="acceptFile('{{ file.name }}')" class = "cursor-pointer">
                                 <div class="w-8 h-8 flex items-center justify-center bg-green-500 rounded-full">
                                     <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" stroke-width="3"
                                         viewBox="0 0 24 24">
                                         <path d="M5 13l4 4L19 7" />
                                     </svg>
                                 </div>
-                            </a>
+                              </div>
                 
                             <!-- REJECT -->
-                            <a href="/reject/{{ file.name }}">
+                            <div onclick="rejectFile('{{ file.name }}')" class = "cursor-pointer">
                                 <div class="w-8 h-8 flex items-center justify-center bg-red-500 rounded-full">
                                     <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" stroke-width="3"
                                         viewBox="0 0 24 24">
                                         <path d="M6 18L18 6M6 6l12 12" />
                                     </svg>
                                 </div>
-                            </a>
+                              </div>
                 
                 
                             {% else %}
@@ -265,6 +264,8 @@
                             {% endif %}
                 
                         </div>
+
+                      </div>
                     {% endfor %}
                     </div>
 
@@ -275,7 +276,7 @@
                  <div id="uploadMode" class="hidden">
 
                  <!-- SAME BODY AREA (NO HEADER CHANGE) -->
-                 <div class="bg-blue-300 p-4 rounded-t-xl grid grid-cols-5 text-center text-purple-600 font-semibold text-lg shadow-mt">
+                <div class="bg-blue-300 p-4 rounded-t-xl grid grid-cols-5 text-center text-purple-600 font-semibold text-lg shadow-mt">
                     <div></div>
                     <div class="col-span-3 text-center">Upload Files</div>
                     <div></div>
@@ -286,8 +287,8 @@
                   <div class="flex h-full justify-start pl-12 mt-3 gap-8">
 
                        <div data-drop class="w-[580px] h-[320px] border-2 border-dashed border-gray-400 
-                       rounded-2xl flex flex-col items-center justify-center text-center 
-                       bg-white shadow-sm mt-10">
+                         rounded-2xl flex flex-col items-center justify-center text-center 
+                         bg-white shadow-sm mt-10">
 
                             <!-- UPLOAD ICON -->
                             <img src="/static/Uploadicon.png" 
@@ -306,10 +307,9 @@
                             class="mt-2 bg-gray-300 hover:bg-gray-400 px-5 py-2 rounded-xl transition">
                             Choose File
                             </button>
-
                        </div>
 
-                       <div class="w-[2px] h-[300px] bg-gray-300 mt-12"></div>
+                       <div class="w-[2px] h-[320px] bg-gray-300 mt-10"></div>
 
                         <div class="flex items-start gap-6">
 
@@ -334,7 +334,7 @@
                                  Send
                                 </button>
                                 <!-- CANCEL-->
-                                 <button id="cancelBtn"  class="mt-3 bg-gradient-to-r from-red-400 to to-yellow-400 
+                                 <button id="cancelBtn"  class="mt-3 bg-gradient-to-r from-red-400 to-yellow-400 
                                      text-white py-2 rounded-xl text-lg self-end w-[120px]
                                     hover:bg-gray-400">
                                     Cancel
@@ -349,112 +349,278 @@
                 
             </div>
             
+          </div>
+          
         </div>
         
-    </div>
+      </div>
+      
+    </body>
     
-</div>
+    <script>
+      let selectedFiles = [];
+      let lastUpdate = 0;
+      
+      // ELEMENTS
+      const toggle = document.getElementById("modeToggle");
+      const fileInput = document.getElementById("fileInput");
+      const previewList = document.getElementById("previewList");
+      const text = document.getElementById("toggleText");
+      const dropBox = document.querySelector('[data-drop]');
+      const downloadMode = document.getElementById("downloadMode");
+      const uploadMode = document.getElementById("uploadMode"); 
+      const searchBox = document.getElementById("searchBox");
+      const deviceBox = document.getElementById("deviceBox");
+      
+      // UPDATE DEVICE LIST
+      const socket = io(window.location.origin,{
+        transports:["polling"]
+        
+      });
+      
+      socket.on("new_file", (data) => {
+       console.log("New FILE:",data);
+       addFileToUI(data);
+      });
 
-</body>
+      socket.on("device_list", (devices) => {
+       console.log("Connected:",socket.id);
+       const select = document.getElementById("deviceSelect");
+       select.innerHTML = "";
+      
+       for (let id in devices) {
+           const option = document.createElement("option");
+           option.value = id;
+           option.textContent = devices[id].name;
+      
+           select.appendChild(option);
+       }
+      });
+      socket.on("file_update",(data) => {
+        if(data.action ==="accepted"){
+          removeRow(data.file);
+          addFileToUI(data.data);
+        }
+        if (data.action ==="rejected"){
+          removeRow(data.file)
+        }
+      });
+      function acceptFile(filename){
+        fetch(`/accept/${filename}`);
+      }
+      function rejectFile(filename){
+        fetch(`/reject/${filename}`);
+      }
+      function removeRow(filename){
+        const rows=document.querySelectorAll(".file-row");
+        rows.forEach(row=>{
+          if(row.dataset.file === filename){
+            row.remove();
+            updateEmptyState();
+          }
+        });
+      }
+      function updateEmptyState(){
+         const container=document.getElementById("fileContainer");
+         const empty =document.getElementById("emptyState");
+         const hasRows= container.querySelectorAll(".file-row").length>0;
+         if(hasRows){
+          if (empty)empty.style.display="none";
+         }
+         else{
+          if(empty)empty.style.display="flex";
+         }
 
-<script>
-    let selectedFiles = [];
-    let lastUpdate = 0;
+      }
+      function addFileToUI(data){
+        const container = document.getElementById("fileContainer");
 
-    // ELEMENTS
-    const toggle = document.getElementById("modeToggle");
-    const fileInput = document.getElementById("fileInput");
-    const previewList = document.getElementById("previewList");
-    const text = document.getElementById("toggleText");
-    const dropBox = document.querySelector('[data-drop]');
-    const downloadMode = document.getElementById("downloadMode");
-    const uploadMode = document.getElementById("uploadMode"); 
-    const searchBox = document.getElementById("searchBox");
-    const deviceBox = document.getElementById("deviceBox");
-    
-    fileInput.addEventListener("change", () => {
-        const files = Array.from(fileInput.files);
-        addFiles(files);
-    });
-    
-   function addFiles(files) {
-      files.forEach(file => {
-        selectedFiles.push(file);
-       });
+        const row = document.createElement("div");
+        row.dataset.file=data.name;
 
-      renderFiles();   // 🔥 IMPORTANT
-    }
+        row.className = "file-row grid grid-cols-5 items-center bg-white rounded-2xl p-5 mb-4 text-center border border-gray-200 shadow-md";
 
-   function renderFiles() {
+        const parts  =data.name.split('_',2);
+        const token = parts[0];
+        const filename = parts.slice(1).join("_");
+        let actionHTML="";
+        if (data.status === "pending"){
+          actionHTML = `
+            <div class= "flex justify-center items-center gap-4">
+              <div onclick="acceptFile('${data.name}')">
+                <div class="w-8 h-8 flex items-center justify-center bg-green-500 rounded-full">
+                    <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" stroke-width="3"
+                      viewBox="0 0 24 24">
+                      <path d="M5 13l4 4L19 7" />
+                    </svg>
+                </div>
+              </div>
 
-      previewList.innerHTML = "";
-
-      selectedFiles.forEach((file, index) => {
-
-         const div = document.createElement("div");
-
-        div.className = "flex items-center justify-between bg-gray-200 px-4 py-3 rounded-xl text-lg gap-3";
-
-        div.innerHTML = `
-          <div class="flex items-center gap-3 min-w-0">
-          <img src="${getFileIcon(file.name)}" class="w-8 h-8">
-          <span class="truncate font-medium break-words overflow-hidden">
-            ${file.name}
-            </span>
+              <div onclick="rejectFile('${ data.name }')">
+                <div class="w-8 h-8 flex items-center justify-center bg-red-500 rounded-full">
+                  <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" stroke-width="3"
+                     viewBox="0 0 24 24">
+                     <path d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+               </div>
+              </div>
+            </div>
+           `;
+        }
+        else{
+          actionHTML = `
+            <div class= "flex justify-center items-center gap-4">
+              <a href="/print/${ data.name }">
+                <span class="text-2xl">🖨</span>
+              </a>
+              <a href="/download/${ data.name }">
+                <div class="w-8 h-8 flex items-center justify-center bg-green-500 rounded-full text-white">
+                  ⬇
+                </div>
+              </a>
+                
+              <a href="/delete/${ data.name }" onclick="return confirm('Delete this file?')">
+                <div class="w-9 h-9 flex items-center justify-center 
+                  bg-red-500 rounded-full 
+                  shadow-md hover:shadow-lg 
+                  hover:bg-red-600 
+                  hover:scale-110 
+                  transition duration-200 cursor-pointer">
+                  <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" stroke-width="2"
+                    viewBox="0 0 24 24">
+                      <path d="M19 7L5 7M10 11v6M14 11v6M9 7V4h6v3M5 7l1 12h12l1-12" />
+                  </svg>
+                </div> 
+              </a>
+            </div>
+            `;
+        }
+        row.innerHTML = `
+          <div class="text-teal-600 font-semibold text-lg">
+             ${token}
           </div>
 
-          <img src="/static/recycle_bin.png" 
-           class="w-6 h-6 cursor-pointer hover:scale-110 transition delete-btn"
-           data-index="${index}">
+         <div class="truncate text-gray-700 px-2">
+            ${filename}
+         </div>
+
+         <div class="text-purple-500">
+            ${data.time}
+         </div>
+
+         <div class="text-purple-500">
+            ${data.date}
+         </div>
+         ${actionHTML}
         `;
-        previewList.appendChild(div);
-    });
-    document.getElementById("cancelBtn").addEventListener("click", () => {
-       selectedFiles = [];
-       renderFiles();
-    });
-    document.getElementById("sendBtn").addEventListener("click", () => {
 
-       if (selectedFiles.length === 0) {
-         alert("No files selected!");
-         return;
-        }
+        container.prepend(row); 
+        updateEmptyState();
+      }
 
-        // FOR NOW (frontend complete)
-        alert(`${selectedFiles.length} file(s) ready to send`);
+      fileInput.addEventListener("change", () => {
+        const files = Array.from(fileInput.files);
+        addFiles(files);
+      });
+    
+      function addFiles(files) {
+        files.forEach(file => {
+         const exists=selectedFiles.some(f=>f.name === file.name && f.size === file.size);
+         if (!exists){
+          selectedFiles.push(file);
+         }
+        });
 
-        console.log("Files:", selectedFiles);
+        renderFiles();   
+      }
 
-    });
-    // DELETE BUTTON WORKS HERE 
-    document.querySelectorAll(".delete-btn").forEach(btn => {
-        btn.addEventListener("click", () => {
+      function renderFiles() {
+        previewList.innerHTML = "";
+
+        selectedFiles.forEach((file, index) => {
+
+          const div = document.createElement("div");
+
+          div.className = "flex items-center justify-between bg-gray-200 px-4 py-3 rounded-xl text-lg gap-3";
+
+          div.innerHTML = `
+           <div class="flex items-center gap-3 min-w-0">
+           <img src="${getFileIcon(file.name)}" class="w-8 h-8">
+            <span class="truncate font-medium overflow-hidden">
+              ${file.name}
+            </span>
+           </div>
+
+           <img src="/static/recycle_bin.png" 
+            class="w-6 h-6 cursor-pointer hover:scale-110 transition delete-btn"
+           data-index="${index}">
+          `;
+           previewList.appendChild(div);
+        });
+    
+        // DELETE BUTTON WORKS HERE 
+        document.querySelectorAll(".delete-btn").forEach(btn => {
+          btn.addEventListener("click", () => {
             const index = btn.dataset.index;
             selectedFiles.splice(index, 1);
             renderFiles();
+          });
         });
-    });
-  }
+      }
+      function getSelectedDevices() {
+         const select = document.getElementById("deviceSelect");
+         return Array.from(select.selectedOptions).map(o => o.value);
+      }
 
-    // CHECK SERVER UPDATES
-    fetch('/check-updates')
-        .then(res => res.json())
-        .then(data => {
-            lastUpdate = data.last_update;
+      function uploadFiles() {
+
+        const targets = getSelectedDevices();
+
+        if (targets.length === 0) {
+          alert("Select device!");
+          return;
+        }
+
+        const formData = new FormData();
+
+        selectedFiles.forEach(file => {
+          formData.append("files", file);
         });
 
-    setInterval(() => {
-        fetch('/check-updates')
-            .then(res => res.json())
-            .then(data => {
-                if (data.last_update !== lastUpdate) {
-                    location.reload();
-                }
-            });
-    }, 2000);
+        targets.forEach(t => {
+          formData.append("targets", t);
+        });
 
-    // SEARCH FUNCTION
-    document.getElementById("searchInput").addEventListener("input", function () {
+       fetch("/upload", {
+         method: "POST",
+         body: formData
+       })
+       .then(res => {
+          if (res.ok) {
+            alert("Sent!");
+            selectedFiles = [];
+            renderFiles();
+          }
+       });
+      }
+      document.getElementById("cancelBtn").addEventListener("click", () => {
+       selectedFiles = [];
+       renderFiles();
+      });
+      document.getElementById("sendBtn").addEventListener("click", () => {
+    
+        if (selectedFiles.length === 0) {
+          alert("No files selected!");
+          return;
+          // FOR NOW (frontend complete)
+        }
+       uploadFiles();
+      
+      });
+  
+      
+      // SEARCH FUNCTION
+      document.getElementById("searchInput").addEventListener("input", function () {
 
         let value = this.value.toLowerCase();
         let rows = document.querySelectorAll(".file-row");
@@ -470,33 +636,34 @@
             }
         });
 
-    });
-
-    dropBox.addEventListener("dragover", (e) => {
+      });
+    
+      if (dropBox){
+        dropBox.addEventListener("dragover", (e) => {
          e.preventDefault();
          dropBox.classList.add("border-purple-400");
-    });
+        });
 
-    dropBox.addEventListener("dragleave", () => {
+        dropBox.addEventListener("dragleave", () => {
          dropBox.classList.remove("border-purple-400");
-    });
+        });
 
-    dropBox.addEventListener("drop", (e) => {
-        e.preventDefault();
-        dropBox.classList.remove("border-purple-400");
+        dropBox.addEventListener("drop", (e) => {
+          e.preventDefault();
+          dropBox.classList.remove("border-purple-400");
 
-        const files = Array.from(e.dataTransfer.files);
-        addFiles(files);
-    });
+          const files = Array.from(e.dataTransfer.files);
+          addFiles(files);
+        });
+      }
 
+      // DEFAULT MODE → DOWNLOAD
+      let isUpload = false;
 
-    // DEFAULT MODE → DOWNLOAD
-    let isUpload = false;
+      // MAIN UI CONTROL FUNCTION
+      function updateUI() {
 
-    // MAIN UI CONTROL FUNCTION
-    function updateUI() {
-
-        if (!isUpload) {
+         if (!isUpload) {
             // 🔵 DOWNLOAD MODE
 
             toggle.classList.add("flex-row-reverse");
@@ -508,7 +675,8 @@
             searchBox.classList.remove("hidden");
             deviceBox.classList.add("hidden");
 
-        } else {
+          } 
+         else {
             // 🟣 UPLOAD MODE
 
             toggle.classList.remove("flex-row-reverse");
@@ -519,41 +687,40 @@
 
             searchBox.classList.add("hidden");
             deviceBox.classList.remove("hidden");
-        }
-    }
+         }
+      }
 
-    // INITIAL LOAD
-    updateUI();
+      // INITIAL LOAD
+      updateUI();
 
-    // TOGGLE CLICK
-    toggle.addEventListener("click", () => {
+      // TOGGLE CLICK
+      toggle.addEventListener("click", () => {
         isUpload = !isUpload;
         updateUI();
-    });
-    function getFileIcon(filename) {
-       const ext = filename.split('.').pop().toLowerCase();
+      });
+     function getFileIcon(filename) {
+        const ext = filename.split('.').pop().toLowerCase();
 
-      if (["doc", "docx"].includes(ext)) {
-        return "/static/docx_file.png";
-      } 
-      else if (["xls", "xlsx", "csv"].includes(ext)) {
-        return "/static/excel_file.png";
-      } 
-      else if (["pdf"].includes(ext)) {
-        return "/static/pdf_file.png";
-      } 
-      else if (["mp4", "mkv", "avi", "mov"].includes(ext)) {
-        return "/static/video_file.png";
-      } 
-      else if (["png","jpg","jpeg","heic"].includes(ext)) {
-         return "/static/image_file.png";
+        if (["doc", "docx"].includes(ext)) {
+          return "/static/docx_file.png";
+        } 
+        else if (["xls", "xlsx", "csv"].includes(ext)) {
+          return "/static/excel_file.png";
+        } 
+        else if (["pdf"].includes(ext)) {
+          return "/static/pdf_file.png";
+        } 
+       else if (["mp4", "mkv", "avi", "mov"].includes(ext)) {
+          return "/static/video_file.png";
+       } 
+       else if (["png","jpg","jpeg","heic"].includes(ext)) {
+          return "/static/image_file.png";
+       }
+       else {
+         return "/static/file_icon.png"; // default
+        }
       }
-      else {
-        return "/static/file_icon.png"; // default
-      }
-   }
-
-    
+      updateEmptyState();
 </script>
 
 </html>

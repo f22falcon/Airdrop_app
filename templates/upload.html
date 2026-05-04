@@ -3,7 +3,9 @@
 
 <head>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="https://cdn.socket.io/4.0.1/socket.io.min.js"></script>
     <script src="https://cdn.tailwindcss.com"></script>
+
 
     <title>Upload</title>
 </head>
@@ -61,7 +63,31 @@
         <div id="preview" class="flex-1 overflow-y-auto border rounded-xl p-2 mb-2 bg-gray-100">
            
         </div>
+        <!-- incoming fil popup -->
+        <div id="incomingPopup" class="hidden fixed 
+        inset-0 flex items-center justify-center bg-black bg-opacity-40 z-50">
 
+          <div class="bg-white p-5 rounded-xl shadow-xl w-[260px] text-center">
+
+           <p class="font-bold text-lg mb-3">📥 Incoming File</p>
+
+           <p id="incomingName" class="text-sm mb-4 truncate"></p>
+
+           <div class="flex justify-between gap-3">
+             <button onclick="acceptIncoming()" 
+               class="flex-1 bg-green-300 py-2 rounded-xl font-semibold">
+               Accept
+             </button>
+
+             <button onclick="rejectIncoming()" 
+               class="flex-1 bg-red-400 py-2 rounded-xl text-white font-semibold">
+               Reject
+             </button>
+           </div>
+
+          </div>
+        </div>
+        
         <!-- BUTTONS -->
         <div class="flex gap-2 mt-auto">
             <button onclick="cancelAll()" class="w-1/2 bg-gray-300 py-2 rounded-xl text-lg">
@@ -76,6 +102,45 @@
     </div>
 
     <script>
+        const socket = io(window.location.origin,{
+            transports:["polling"]
+        });
+        
+        
+        // register this mobile device
+        socket.on("connect",() => {
+            const deviceId = "mobile_" + Math.random().toString(36).substr(2,5);
+            
+            socket.emit("register", {
+                id: deviceId,
+                name: "Mobile"
+            });
+            console.log("CONNECTED:,socket.id")
+        });
+        
+        let incomingFile = null;
+
+        // TEST RECEIVING FILE
+        socket.on("incoming_file", (data) => {
+            incomingFile = data;
+            document.getElementById("incomingName").innerText = data.filename;
+            document.getElementById("incomingPopup").classList.remove("hidden");
+        });
+        function acceptIncoming(){
+            if (!incomingFile) return;
+            window.location.href=`/temp-download/${incomingFile.stored}`;
+            setTimeout(() =>{
+                fetch(`/temp-delete/${incomingFile.stored}`);
+            },1500)
+            document.getElementById("incomingPopup").classList.add("hidden");
+            incomingFile = null;
+        }
+        function rejectIncoming(){
+            if (!incomingFile) return;
+            fetch(`/reject/${incomingFile.stored}`);
+            document.getElementById("incomingPopup").classList.add("hidden");
+            incomingFile = null;
+        }
         const dropArea = document.querySelector(".border-dashed");
 
             // Drag over
@@ -136,7 +201,6 @@
                 preview.appendChild(div);
             });
         }
-
         // REMOVE ONE FILE
         function removeFile(index) {
             files.splice(index, 1);
@@ -206,6 +270,7 @@
                     showMessage("Upload failed, try again", false);
                 });
         }
+       
     </script>
 
 </body>
