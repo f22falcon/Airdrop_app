@@ -13,9 +13,10 @@ from flask_socketio import SocketIO, emit
 app = Flask(__name__)
 socketio = SocketIO(app, cors_allowed_origins="*", async_mode="threading")
 devices = {}  
-# {device_id: {"sid": socket_id, "name": device_name}}
 
+ACTIVE_DOWNLOADS= set()
 # Windows only shortcut
+
 def create_shortcut():
     try:
         import winshell
@@ -116,16 +117,21 @@ def generate_qr(ip):
 
 @socketio.on("register")
 def register(data):
-    print("Register",data)
-    device_id = data["id"]
-    name = data["name"]
+    name=data.get("name","Unknown")
+    
+    for K in list(devices):
+        if  devices[K]["name"]==name:  
+          del devices[K]
 
-    devices[device_id] = {
+    print("Register",data)
+    #add fresh device
+    print("Devices:",devices)
+    devices[request.sid] = {
         "sid": request.sid,
         "name": name
     }
 
-    emit("device_list", devices, broadcast=True)
+    socketio.emit("device_list", devices)
 
 
 @socketio.on("disconnect")
@@ -283,9 +289,32 @@ def delete_file(filename):
 @app.route('/temp-download/<filename>')
 def temp_download(filename):
     temp_path=os.path.join(Temp,filename)
-    if os.path.exists(temp_path):
-      return send_from_directory(Temp,filename,as_attachment=True)
-    return "File not found",404
+    if not os.path.exists(temp_path):
+      return "File not found",404
+    ACTIVE_DOWNLOADS.add(filename)
+    real_name = filename.split("_",1)[1] if "_" in filename else filename
+    def delayed_delete(path,name):
+        time.sleep(5)
+        if name not in ACTIVE_DOWNLOADS:
+            try:
+                if os.path.exists(path):
+                  os.remove(path)
+                  print("delete",name)
+            except:
+                pass
+    response = send_from_directory(
+        Temp,
+        filename,
+        as_attachment=True,
+        download_name=real_name
+    )
+    #delete after sending
+    @response.call_on_close
+    def release():
+       ACTIVE_DOWNLOADS.discard(filename)
+       threading.Thread(target=delayed_delete,args=(temp_path,filename),
+       daemon=True).start()
+    return response
 
 @app.route('/temp-delete/<filename>')
 def temp_delete(filename):
@@ -396,6 +425,18 @@ def cleanup(folder, seconds=86400):  # 1 day
         if os.path.isfile(path):
             if now - os.path.getmtime(path) > seconds:
                 os.remove(path)
+def cleanup_temp_safe():
+    while True:
+        time.sleep(10)
+        for f in os.listdir(Temp):
+            path=os.path.join(Temp,f)
+            if f in ACTIVE_DOWNLOADS:
+                continue
+            if time.time()- os.path.getatime(path)>30:
+                try:
+                    os.remove(path)
+                except:
+                    pass
 
 #---------------- RUN ----------------
 def open_browser(ip):
@@ -407,6 +448,7 @@ if __name__ == '__main__':
     
     cleanup("uploads/accepted")
     cleanup("uploads/pending")
+    cleanup("uploads/temp")
     generate_qr(ip)
 
     desktop = os.path.join(os.path.expanduser("~"), "Desktop")
@@ -416,17 +458,18 @@ if __name__ == '__main__':
       create_shortcut()
 
     threading.Thread(
-      target=lambda: socketio.run(
+      target=lambda:launch_control_panel(ip),daemon=True
+    ).start()
+
+    socketio.run(
         app,
         host='0.0.0.0',
         port=5000,
         debug=False,
         use_reloader=False
       ),
-      daemon=True
-    ).start()
-
-    launch_control_panel(ip)
+      
+    
 
 # pyinstaller --onefile --noconsole ^
 # --icon=icon.ico ^

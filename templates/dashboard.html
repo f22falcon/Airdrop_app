@@ -56,9 +56,11 @@
                           class="outline-none w-full text-purple-500 bg-transparent">
                     </div>
                     <div id="deviceBox" class="hidden">
-                      <select id="deviceSelect" multiple
-                      class="border border-purple-300 rounded-xl px-3 py-2  w-[250px] h-[80px]text-purple-500 overflow-y-auto">
-                      </select>
+                      <div class="bg-white p-4 rounded-2xl shadow-md w-[280px]">
+                        <p class="font-semibold mb-3 text-gray-700">Choose devices</p>
+                        <div id="deviceList" class="flex flex-col gap-3 max-h-[150px] overflow-y-auto">
+                        </div>
+                      </div>
                     </div>
 
                     <!-- FILTER -->
@@ -384,18 +386,10 @@
       });
 
       socket.on("device_list", (devices) => {
-       console.log("Connected:",socket.id);
-       const select = document.getElementById("deviceSelect");
-       select.innerHTML = "";
-      
-       for (let id in devices) {
-           const option = document.createElement("option");
-           option.value = id;
-           option.textContent = devices[id].name;
-      
-           select.appendChild(option);
-       }
+        console.log("Devices:",devices);
+        renderDevices(devices);
       });
+
       socket.on("file_update",(data) => {
         if(data.action ==="accepted"){
           removeRow(data.file);
@@ -436,9 +430,8 @@
         const container = document.getElementById("fileContainer");
 
         const row = document.createElement("div");
-        row.dataset.file=data.name;
-
         row.className = "file-row grid grid-cols-5 items-center bg-white rounded-2xl p-5 mb-4 text-center border border-gray-200 shadow-md";
+        row.dataset.file=data.name;
 
         const parts  =data.name.split('_',2);
         const token = parts[0];
@@ -533,6 +526,42 @@
 
         renderFiles();   
       }
+      let  selectedDevices= new Set();
+      function  renderDevices(devices){
+          const container = document.getElementById("deviceList");
+          container.innerHTML="";
+          for (let id in devices){
+            const card=document.createElement("div");
+            card.className = `
+              flex items-center justify-between bg-gray-100 px-3 py-2 round-xl
+              cursor-pointer transition hover:bg-blue-100
+            `;
+            card.innerHTML= `
+            <div class="flex items-center gap-2">
+              <span class="text-lg"></span>
+              <span class="text-sm text-purple-600">${devices[id].name}</span>
+            </div>
+            <input type="checkbox"
+            class="device-checkbox pointer-events-none">  
+            `;
+            card.onclick =() =>toggleDevice(card,id);
+            container.appendChild(card);
+          }
+      }
+      function toggleDevice(card,id){
+        const checkbox = card.querySelector(".device-checkbox");
+        if (selectedDevices.has(id)){
+          selectedDevices.delete(id);
+          checkbox.checked=false;
+          card.classList.remove("bg-blue-200","ring-2","ring-blue-400");
+        }
+        else {
+          selectedDevices.add(id);
+          checkbox.checked=true;
+          card.classList.add("bg-blue-200","ring-2","ring-blue-400");
+        }
+      }
+
 
       function renderFiles() {
         previewList.innerHTML = "";
@@ -568,8 +597,7 @@
         });
       }
       function getSelectedDevices() {
-         const select = document.getElementById("deviceSelect");
-         return Array.from(select.selectedOptions).map(o => o.value);
+         return Array.from(selectedDevices);
       }
 
       function uploadFiles() {

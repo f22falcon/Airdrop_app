@@ -102,44 +102,84 @@
     </div>
 
     <script>
+        let files = [];
+        let uploadQueue = [];
+        let currentXHR =null;
+        let isUploading = false;
+        let cancelUpload = false;  
+        const iconCache = {};
+        [
+            "/static/image_file.png",
+            "/static/video_file1.png",
+            "/static/pdf_file.png",
+            "/static/excel_file1.png",
+            "/static/docx_file.png",
+            "/static/file_icon1.png",
+        ].forEach(src =>{
+            const img =new Image ();
+            img.src=src;
+            iconCache[src]=img;
+        });
+
+
         const socket = io(window.location.origin,{
             transports:["polling"]
         });
         
-        
+        const token ="{{token}}";
         // register this mobile device
+        const deviceName= "Mobile-"+ token;
         socket.on("connect",() => {
-            const deviceId = "mobile_" + Math.random().toString(36).substr(2,5);
+            console.log("CONNECTED:",socket.id);
             
             socket.emit("register", {
-                id: deviceId,
-                name: "Mobile"
+                name: deviceName
             });
-            console.log("CONNECTED:,socket.id")
         });
-        
+
+        let incomingQueue =[];
         let incomingFile = null;
 
         // TEST RECEIVING FILE
         socket.on("incoming_file", (data) => {
-            incomingFile = data;
-            document.getElementById("incomingName").innerText = data.filename;
-            document.getElementById("incomingPopup").classList.remove("hidden");
+            incomingQueue.push (data);
+            if(!incomingFile){
+                showNextFile();
+            }
         });
+        function showNextFile(){
+            if (incomingQueue.length===0){
+              incomingFile=null;
+              return;
+            }
+            incomingFile=incomingQueue[0];
+            document.getElementById("incomingName").innerText=incomingFile.filename;
+            document.getElementById("incomingPopup").classList.remove("hidden");
+
+        }
         function acceptIncoming(){
             if (!incomingFile) return;
-            window.location.href=`/temp-download/${incomingFile.stored}`;
-            setTimeout(() =>{
-                fetch(`/temp-delete/${incomingFile.stored}`);
-            },1500)
-            document.getElementById("incomingPopup").classList.add("hidden");
-            incomingFile = null;
+            const a = document.createElement("a");
+            a.href=`/temp-download/${incomingFile.stored}`;
+            a.download=incomingFile.filename;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            
+            nextFile();
         }
         function rejectIncoming(){
             if (!incomingFile) return;
-            fetch(`/reject/${incomingFile.stored}`);
-            document.getElementById("incomingPopup").classList.add("hidden");
-            incomingFile = null;
+            fetch(`/temp-delete/${incomingFile.stored}`);
+            nextFile();
+        }
+        function nextFile(){
+            document.getElementById("incomingPopup").classList.add("hidden")
+            incomingQueue.shift();
+            incomingFile=null;
+            setTimeout(()=>{
+                showNextFile();
+            },300);
         }
         const dropArea = document.querySelector(".border-dashed");
 
@@ -164,7 +204,7 @@
                 files = files.concat(droppedFiles);
                 renderPreview();
             });
-        let files = [];
+        
 
         // SELECT FILES
         document.getElementById("fileInput").addEventListener("change", function (e) {
@@ -172,6 +212,28 @@
             files=files.concat(newFiles);
             renderPreview();
         });
+        function getFileIcon(name){
+
+            const ext = name.split('.').pop().toLowerCase();
+            if (["png","jpg","jpeg"].includes(ext)) return "/static/image_file.png";
+            if (["mp4","mkv"].includes(ext)) return "/static/video_file1.png";
+            if (["pdf"].includes(ext)) return "/static/pdf_file.png";
+            if (["doc","docx"].includes(ext)) return "/static/docx_file1.png";
+            if (["xls","xlsx"].includes(ext)) return "/static/excel_file1.png";
+            return "/static/file_icon.png";
+        }
+        function formatFileSize(bytes){
+            const kb =bytes/ 1024;
+            const mb = kb/1024;
+            const gb = mb/1024;
+            if (gb>= 1){
+                return gb.toFixed(2) + " GB";
+            }
+            if(mb>=1){
+                return mb.toFixed(2) + " MB";
+            }
+            return kb.toFixed(1) + " KB";
+        }
 
         // PREVIEW
         function renderPreview() {
@@ -183,21 +245,55 @@
 
               div.className = "flex justify-between items-center border rounded-xl px-3 py-2 mb-2 bg-white shadow-sm";
                 div.classList.add("hover:bg-gray-200");
+                // div.className = "flex items-center gap-3 p-3 bg-white rounded-xl shadow-sm mb-2";
+
                 div.innerHTML = `
-            <span class="truncate w-48 block">${file.name}</span>
-            <button onclick="removeFile(${index})" 
-               class="p-1 rounded-full hover:bg-red-100 transition">
 
-               <svg class="w-6 h-6 text-pink-500" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-               <path d="M3 6h18"/>
-               <path d="M8 6V4h8v2"/>
-               <path d="M19 6l-1 14H6L5 6"/>
-               <path d="M10 11v6"/>
-               <path d="M14 11v6"/>
-               </svg>
-            </button>
-        `;
+                   <!-- ICON -->
+                   <img decoding="async" loading ="eager" src="${getFileIcon(file.name)}" class="w-10 h-10 flex-shrink-0">
 
+                   <!-- INFO -->
+                   <div class="flex-1 min-w-0">
+                     <p class="text-sm font-semibold truncate w-full block">${file.name}</p>
+                     <p class="text-xs text-gray-500">${formatFileSize(file.size)}</p>
+                   </div>
+
+                   <!-- PROGRESS -->
+                   
+                     <div class="relative w-12 h-12">
+                       <svg class="w-full h-full transform -rotate-90">
+                         <circle cx="24" cy="24" r="20"
+                           stroke="#e5e7eb"
+                           stroke-width="4"
+                           fill="none"/>
+                         <circle class="progress-bar"
+                           cx="24" cy="24" r="20"
+                           stroke="green"
+                           stroke-width="4"
+                           fill="none"
+                           stroke-dasharray="125.6"
+                           stroke-dashoffset="125.6"/>
+                       </svg>
+
+                       <span class="progress-text absolute inset-0 flex items-center justify-center text-xs">
+                         0%
+                       </span>
+                     </div>
+                   
+
+                     <!-- DELETE -->
+                     <button onclick="removeFile(${index})"
+                      class="p-1 rounded-full hover:bg-red-100">
+                        <svg class= "w-6 h-6 text-pink-500" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                          <path d="M3 6h18"/>
+                          <path d="M8 6V4h8v2"/>
+                          <path d="M19 6l-1 14H6L5 6"/>
+                          <path d="M10 11v6"/>
+                          <path d="M14 11v6"/>
+                        </svg>
+                     </button>
+                    
+                `;
                 preview.appendChild(div);
             });
         }
@@ -241,36 +337,116 @@
         }
 
         // UPLOAD
-        function uploadFiles() {
+        async function uploadFiles(){
 
-            if (files.length === 0) {
-                showMessage("No file selected", false);
-                return;
+          if (files.length === 0){
+            showMessage("No file selected", false);
+            return;
+          }
+          if (isUploading) return;
+          cancelUpload = false;
+          isUploading = true;
+
+          uploadQueue = [...files];
+          while(uploadQueue.length > 0){
+            if (cancelUpload){
+              break;
             }
-
-            let formData = new FormData();
-
-            files.forEach(file => {
-                formData.append("files", file);
-            });
-
-            fetch("/upload?token={{ token }}", {
-                method: "POST",
-                body: formData
-            })
-                .then(res => {
-                    if (res.ok) {
-                        showMessage("Files uploaded successfully");
-                        cancelAll();
-                    } else {
-                        showMessage("Upload failed, try again", false);
-                    }
-                })
-                .catch(() => {
-                    showMessage("Upload failed, try again", false);
-                });
+            const file = uploadQueue[0];
+            try {
+              await uploadSingleFile(file);
+              files = files.filter(f => f!== file);
+              renderPreview();
+              uploadQueue.shift();
+            }
+            catch (err){
+                if (cancelUpload){
+                    showMessage("Upload cancelled", false);
+                }
+                else{
+                    showMessage("Upload failed", false);
+                }
+                break;
+            }
+          }
+          isUploading = false;
+          if(!cancelUpload && uploadQueue.length === 0){
+            showMessage("All files uploaded successfully");
+          }
         }
-       
+        function uploadSingleFile(file){
+
+          return new Promise((resolve, reject)=>{
+
+          const formData = new FormData();
+          formData.append("files", file);
+
+          const preview = document.getElementById("preview");
+
+          const cards = [...preview.children];
+
+          const card = cards.find(c =>
+             c.innerText.includes(file.name)
+          );
+
+          currentXHR = new XMLHttpRequest();
+
+          currentXHR.upload.onprogress = (e)=>{
+
+            if(e.lengthComputable){
+
+             const percent = Math.round((e.loaded/e.total)*100);
+
+             const circle = card.querySelector(".progress-bar");
+             const text = card.querySelector(".progress-text");
+
+             const offset = 125.6 - (125.6 * percent / 100);
+
+             circle.style.strokeDashoffset = offset;
+
+             text.innerText = percent + "%";
+            }
+          };
+
+          currentXHR.onload = ()=>{
+
+            if(currentXHR.status === 200){
+              resolve();
+            }
+            else{
+             reject();
+            }
+           };
+
+          currentXHR.onerror = ()=>{
+             if (cancelUpload){
+                reject("cancelled");
+             }
+             else{
+                reject("error");
+             } 
+          } 
+          
+
+          currentXHR.open("POST", `/upload?token={{ token }}`);
+
+          currentXHR.send(formData);
+
+          });
+        }
+        function cancelAll(){
+          cancelUpload = true;
+          if (currentXHR){
+            currentXHR.abort();
+          }
+          uploadQueue = [];
+          files = [];
+          document.getElementById("fileInput").value = "";
+          renderPreview();
+          showMessage("Upload cancelled", false);
+          isUploading = false;
+        }
+
     </script>
 
 </body>
