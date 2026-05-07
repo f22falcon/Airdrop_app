@@ -14,8 +14,7 @@ app = Flask(__name__)
 socketio = SocketIO(app, cors_allowed_origins="*", async_mode="threading")
 devices = {}  
 
-ACTIVE_DOWNLOADS= set()
-# Windows only shortcut
+
 
 def create_shortcut():
     try:
@@ -283,38 +282,33 @@ def delete_file(filename):
         os.remove(path1)
     if os.path.exists(path2):
         os.remove(path2)
-    
-  
-    return redirect('/dashboard')
+    return "OK"
+
 @app.route('/temp-download/<filename>')
 def temp_download(filename):
     temp_path=os.path.join(Temp,filename)
     if not os.path.exists(temp_path):
       return "File not found",404
-    ACTIVE_DOWNLOADS.add(filename)
+ 
     real_name = filename.split("_",1)[1] if "_" in filename else filename
     def delayed_delete(path,name):
         time.sleep(5)
-        if name not in ACTIVE_DOWNLOADS:
-            try:
-                if os.path.exists(path):
+    
+        try:
+           if os.path.exists(path):
                   os.remove(path)
                   print("delete",name)
-            except:
+        except:
                 pass
-    response = send_from_directory(
+    threading.Thread(target=delayed_delete,args=(temp_path,filename),
+       daemon=True).start()
+    return send_from_directory(
         Temp,
         filename,
         as_attachment=True,
         download_name=real_name
     )
-    #delete after sending
-    @response.call_on_close
-    def release():
-       ACTIVE_DOWNLOADS.discard(filename)
-       threading.Thread(target=delayed_delete,args=(temp_path,filename),
-       daemon=True).start()
-    return response
+    
 
 @app.route('/temp-delete/<filename>')
 def temp_delete(filename):
@@ -416,7 +410,7 @@ def launch_control_panel(ip):
 
     app.mainloop()
 
-def cleanup(folder, seconds=86400):  # 1 day
+def cleanup(folder, seconds=86400):  
     now = time.time()
 
     for f in os.listdir(folder):
@@ -425,18 +419,8 @@ def cleanup(folder, seconds=86400):  # 1 day
         if os.path.isfile(path):
             if now - os.path.getmtime(path) > seconds:
                 os.remove(path)
-def cleanup_temp_safe():
-    while True:
-        time.sleep(10)
-        for f in os.listdir(Temp):
-            path=os.path.join(Temp,f)
-            if f in ACTIVE_DOWNLOADS:
-                continue
-            if time.time()- os.path.getatime(path)>30:
-                try:
-                    os.remove(path)
-                except:
-                    pass
+
+
 
 #---------------- RUN ----------------
 def open_browser(ip):
