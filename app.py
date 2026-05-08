@@ -139,7 +139,7 @@ def disconnect():
         if devices[d]["sid"] == request.sid:
             del devices[d]
 
-    emit("device_list", devices, broadcast=True)
+    socketio.emit("device_list", devices)
 
 
 
@@ -284,6 +284,18 @@ def delete_file(filename):
         os.remove(path2)
     return "OK"
 
+def get_delete_delay(file_size):
+    if file_size < 1 * 1024 * 1024:  
+        return 5  
+    elif file_size < 10 * 1024 * 1024:  
+        return 15  
+    elif file_size < 100 * 1024 * 1024:  
+        return 30  
+    else:
+        return 60
+
+
+
 @app.route('/temp-download/<filename>')
 def temp_download(filename):
     temp_path=os.path.join(Temp,filename)
@@ -292,7 +304,7 @@ def temp_download(filename):
  
     real_name = filename.split("_",1)[1] if "_" in filename else filename
     def delayed_delete(path,name):
-        time.sleep(5)
+        time.sleep(get_delete_delay(os.path.getsize(path)))
     
         try:
            if os.path.exists(path):
@@ -368,7 +380,7 @@ def launch_control_panel(ip):
 
     label = ctk.CTkLabel(
         body,
-        text="to launch dashboard click launh",
+        text="to launch dashboard click launch",
         text_color="Black",
         font=("Calibary", 10)
     )
@@ -451,17 +463,21 @@ if __name__ == '__main__':
         port=5000,
         debug=False,
         use_reloader=False
-      ),
+      )
       
     
-
-# pyinstaller --onefile --noconsole ^
-# --icon=icon.ico ^
-# --hidden-import customtkinter ^
 # --hidden-import winshell ^
 # --hidden-import win32com ^
-# --add-data "templates;templates" ^
-# --add-data "static;static" ^
-# app.py
+# --icon=icon.ico ^
 
+# pyinstaller --onefile \
+# --hidden-import engineio.async_drivers.threading \
+# --hidden-import socketio \
+# --hidden-import engineio \
+# --hidden-import flask_socketio \
+# --hidden-import simple_websocket \
+# --hidden-import customtkinter \
+# --add-data "templates:templates" \
+# --add-data "static:static" \
+# app.py
 
